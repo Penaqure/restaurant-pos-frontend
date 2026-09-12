@@ -1,0 +1,139 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --background: #f6f7fb;
+  --surface: #f6f7fb;
+  --surface-card: #ffffff;
+  --foreground: #14141f;
+  --muted-foreground: #6b6f80;
+  --border: #e6e7ee;
+
+  --brand-50: #f2f1ff;
+  --brand-100: #e6e4ff;
+  --brand-200: #d1cdff;
+  --brand-300: #b3abff;
+  --brand-400: #9082ff;
+  --brand-500: #6e56ff;
+  --brand-600: #5a3ff0;
+  --brand-700: #4a32cc;
+  --brand-800: #3c29a3;
+  --brand-900: #322480;
+
+  --accent-500: #ff8a3d;
+  --success-500: #16a34a;
+  --warning-500: #f59e0b;
+  --danger-500: #ef4444;
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+
+  --shadow-soft: 0 1px 2px 0 rgb(20 20 31 / 0.04), 0 1px 1px 0 rgb(20 20 31 / 0.03);
+  --shadow-card: 0 1px 3px 0 rgb(20 20 31 / 0.06), 0 8px 24px -8px rgb(20 20 31 / 0.08);
+  --shadow-pop: 0 12px 32px -12px rgb(94 63 240 / 0.35);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-card: var(--surface-card);
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
+
+  --color-accent: var(--accent-500);
+  --color-success: var(--success-500);
+  --color-warning: var(--warning-500);
+  --color-danger: var(--danger-500);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+
+  --shadow-soft: var(--shadow-soft);
+  --shadow-card: var(--shadow-card);
+  --shadow-pop: var(--shadow-pop);
+
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
+
+* {
+  border-color: var(--border);
+}
+
+body {
+  background: var(--color-surface);
+  color: var(--color-foreground);
+}
+
+::selection {
+  background: var(--brand-200);
+  color: var(--brand-900);
+}
+
+/* Slim, modern scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Consistent focus ring across the app */
+:focus-visible {
+  outline: 2px solid var(--brand-400);
+  outline-offset: 2px;
+}
+
+/* Tailwind's preflight no longer sets cursor: pointer on buttons (a v3->v4
+   change), which leaves every clickable button showing the plain text-input
+   cursor. Restore it app-wide; disabled buttons fall back to not-allowed. */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+button:disabled,
+[role="button"][aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+/* Printing a table's QR code (from TableQrModal) should print only the
+   modal itself, not the dashboard sidebar/page behind it. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .qr-print-modal,
+  .qr-print-modal * {
+    visibility: visible;
+  }
+  .qr-print-modal {
+    position: fixed;
+    inset: 0;
+    background: white !important;
+  }
+}
