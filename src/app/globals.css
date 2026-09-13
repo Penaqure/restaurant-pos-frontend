@@ -9,16 +9,18 @@
   --muted-foreground: #6b6f80;
   --border: #e6e7ee;
 
-  --brand-50: #f2f1ff;
-  --brand-100: #e6e4ff;
-  --brand-200: #d1cdff;
-  --brand-300: #b3abff;
-  --brand-400: #9082ff;
-  --brand-500: #6e56ff;
-  --brand-600: #5a3ff0;
-  --brand-700: #4a32cc;
-  --brand-800: #3c29a3;
-  --brand-900: #322480;
+  /* "Red chilli" brand ramp -- a warm, saturated red rather than a pastel
+     one, so it reads as assertive/appetizing rather than as an error state. */
+  --brand-50: #fef2f1;
+  --brand-100: #fde2df;
+  --brand-200: #fbc7c0;
+  --brand-300: #f6a195;
+  --brand-400: #ee7161;
+  --brand-500: #e04430;
+  --brand-600: #c81e1e;
+  --brand-700: #a11a1a;
+  --brand-800: #7f1515;
+  --brand-900: #5c1010;
 
   --accent-500: #ff8a3d;
   --success-500: #16a34a;
@@ -32,7 +34,7 @@
 
   --shadow-soft: 0 1px 2px 0 rgb(20 20 31 / 0.04), 0 1px 1px 0 rgb(20 20 31 / 0.03);
   --shadow-card: 0 1px 3px 0 rgb(20 20 31 / 0.06), 0 8px 24px -8px rgb(20 20 31 / 0.08);
-  --shadow-pop: 0 12px 32px -12px rgb(94 63 240 / 0.35);
+  --shadow-pop: 0 12px 32px -12px rgb(200 30 30 / 0.35);
 }
 
 @theme inline {

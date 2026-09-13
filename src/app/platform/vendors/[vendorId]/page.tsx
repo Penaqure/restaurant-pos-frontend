@@ -52,7 +52,7 @@ export default function VendorDetailPage(props: PageProps<"/platform/vendors/[ve
     contactEmail: "",
     contactPhone: "",
     gstin: "",
-    brandColor: "#5a3ff0",
+    brandColor: "#c81e1e",
     planId: "",
     planStatus: "trial" as Vendor["planStatus"],
     currency: "INR",
