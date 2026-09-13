@@ -9,6 +9,7 @@ import { listVendors, Vendor } from "@/services/vendorService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import Pagination from "@/components/ui/Pagination";
 
 const PLAN_STATUS_TONE: Record<Vendor["planStatus"], "brand" | "success" | "danger"> = {
   trial: "brand",
@@ -16,15 +17,22 @@ const PLAN_STATUS_TONE: Record<Vendor["planStatus"], "brand" | "success" | "dang
   suspended: "danger",
 };
 
+const PAGE_SIZE = 10;
+
 export default function PlatformVendorsPage() {
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     listVendors()
       .then(setVendors)
       .finally(() => setLoading(false));
   }, []);
+
+  const pageCount = Math.max(1, Math.ceil(vendors.length / PAGE_SIZE));
+  const safePage = Math.min(page, pageCount);
+  const visibleVendors = vendors.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   return (
     <AppShell title="Vendors" nav={<PlatformNav />}>
@@ -66,7 +74,7 @@ export default function PlatformVendorsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {vendors.map((v) => (
+                  {visibleVendors.map((v) => (
                     <tr key={v.id} className="border-t border-border">
                       <td className="px-5 py-3">
                         <Link href={`/platform/vendors/${v.id}`} className="font-medium text-brand-700 hover:underline">
@@ -94,6 +102,7 @@ export default function PlatformVendorsPage() {
             </div>
           )}
         </CardContent>
+        <Pagination page={safePage} pageCount={pageCount} onPageChange={setPage} />
       </Card>
     </AppShell>
   );

@@ -12,6 +12,9 @@ import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import { Badge } from "@/components/ui/Badge";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import Pagination from "@/components/ui/Pagination";
+
+const PAGE_SIZE = 10;
 
 const emptyForm = {
   name: "",
@@ -30,6 +33,7 @@ export default function PlansPage() {
   const [submitting, setSubmitting] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<SubscriptionPlan | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [page, setPage] = useState(1);
 
   function refresh() {
     return listPlans()
@@ -106,6 +110,10 @@ export default function PlansPage() {
     }
   }
 
+  const pageCount = Math.max(1, Math.ceil(plans.length / PAGE_SIZE));
+  const safePage = Math.min(page, pageCount);
+  const visiblePlans = plans.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
   return (
     <AppShell title="Subscription plans" nav={<PlatformNav />}>
       <div className="grid gap-6 md:grid-cols-[2fr_1fr]">
@@ -138,7 +146,7 @@ export default function PlansPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {plans.map((p) => (
+                    {visiblePlans.map((p) => (
                       <tr key={p.id} className="border-t border-border">
                         <td className="px-5 py-3 font-medium text-foreground">{p.name}</td>
                         <td className="px-5 py-3 font-mono text-muted-foreground">
@@ -173,6 +181,7 @@ export default function PlansPage() {
               </div>
             )}
           </CardContent>
+          <Pagination page={safePage} pageCount={pageCount} onPageChange={setPage} />
         </Card>
 
         <Card className="@container h-fit">

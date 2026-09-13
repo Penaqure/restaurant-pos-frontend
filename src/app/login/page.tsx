@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { AlertCircle, ChefHat, Lock, LogIn, Mail } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { getHomeRoute } from "@/lib/roleHome";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 
@@ -40,7 +41,7 @@ export default function LoginPage() {
     try {
       const user = await login(email, password);
       toast.success(`Welcome back, ${user.firstName}`);
-      router.push(user.role === "super_admin" ? "/platform" : "/dashboard");
+      router.push(getHomeRoute(user.role));
     } catch (err) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Invalid email or password";

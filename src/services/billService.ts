@@ -18,6 +18,7 @@ export type Bill = {
   generatedAt: string;
   discount: { id: string; code: string; type: string; value: string } | null;
   generator: { id: string; firstName: string; lastName: string };
+  vendor: { id: string; name: string; gstin: string | null; country: string };
   order: {
     id: string;
     orderNumber: string;

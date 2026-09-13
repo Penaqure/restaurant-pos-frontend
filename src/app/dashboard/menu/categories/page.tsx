@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { LayoutGrid, Loader2, Pencil, Plus, Trash2, UtensilsCrossed } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import VendorNav from "@/components/layout/VendorNav";
+import { useAuth } from "@/context/AuthContext";
 import { listCategories, listItems, createCategory, updateCategory, deleteCategory, MenuCategory } from "@/services/menuService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
@@ -33,6 +34,9 @@ function swatchFor(id: string) {
 }
 
 export default function CategoriesPage() {
+  const { user } = useAuth();
+  // Mirrors the backend's canManageMenu gate (owner/manager only).
+  const canManage = user?.role === "owner" || user?.role === "manager";
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [itemCounts, setItemCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
@@ -113,7 +117,7 @@ export default function CategoriesPage() {
 
   return (
     <AppShell title="Menu categories" nav={<VendorNav />}>
-      <div className="grid gap-6 md:grid-cols-[2fr_1fr]">
+      <div className={canManage ? "grid gap-6 md:grid-cols-[2fr_1fr]" : ""}>
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -152,22 +156,24 @@ export default function CategoriesPage() {
                       <Badge tone="neutral">
                         {itemCounts[c.id] || 0} item{itemCounts[c.id] === 1 ? "" : "s"}
                       </Badge>
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => startEdit(c)}
-                          title="Edit category"
-                          className="flex size-7 items-center justify-center rounded-md text-brand-700 hover:bg-brand-50"
-                        >
-                          <Pencil className="size-3.5" />
-                        </button>
-                        <button
-                          onClick={() => setDeleteTarget(c)}
-                          title="Delete category"
-                          className="flex size-7 items-center justify-center rounded-md text-danger hover:bg-red-50"
-                        >
-                          <Trash2 className="size-3.5" />
-                        </button>
-                      </div>
+                      {canManage && (
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => startEdit(c)}
+                            title="Edit category"
+                            className="flex size-7 items-center justify-center rounded-md text-brand-700 hover:bg-brand-50"
+                          >
+                            <Pencil className="size-3.5" />
+                          </button>
+                          <button
+                            onClick={() => setDeleteTarget(c)}
+                            title="Delete category"
+                            className="flex size-7 items-center justify-center rounded-md text-danger hover:bg-red-50"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -176,34 +182,36 @@ export default function CategoriesPage() {
           </CardContent>
         </Card>
 
-        <Card className="h-fit">
-          <CardHeader>
-            <CardTitle>{editingId ? "Edit category" : "Add category"}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-foreground">Name</label>
-                <Input required value={name} onChange={(e) => setName(e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-foreground">Description</label>
-                <Input value={description} onChange={(e) => setDescription(e.target.value)} />
-              </div>
-              <div className="flex gap-2">
-                <Button type="submit" loading={submitting} className="flex-1">
-                  {!submitting && <Plus className="size-4" />}
-                  {submitting ? "Saving..." : editingId ? "Update category" : "Add category"}
-                </Button>
-                {editingId && (
-                  <Button type="button" variant="secondary" onClick={resetForm}>
-                    Cancel
+        {canManage && (
+          <Card className="h-fit">
+            <CardHeader>
+              <CardTitle>{editingId ? "Edit category" : "Add category"}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-3">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-foreground">Name</label>
+                  <Input required value={name} onChange={(e) => setName(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-foreground">Description</label>
+                  <Input value={description} onChange={(e) => setDescription(e.target.value)} />
+                </div>
+                <div className="flex gap-2">
+                  <Button type="submit" loading={submitting} className="flex-1">
+                    {!submitting && <Plus className="size-4" />}
+                    {submitting ? "Saving..." : editingId ? "Update category" : "Add category"}
                   </Button>
-                )}
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+                  {editingId && (
+                    <Button type="button" variant="secondary" onClick={resetForm}>
+                      Cancel
+                    </Button>
+                  )}
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {deleteTarget && (

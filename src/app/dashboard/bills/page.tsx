@@ -8,6 +8,7 @@ import VendorNav from "@/components/layout/VendorNav";
 import { listBills, Bill } from "@/services/billService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
+import Pagination from "@/components/ui/Pagination";
 
 const PAYMENT_STYLES: Record<Bill["paymentStatus"], string> = {
   unpaid: "bg-red-50 text-red-700",
@@ -16,15 +17,22 @@ const PAYMENT_STYLES: Record<Bill["paymentStatus"], string> = {
   refunded: "bg-black/5 text-muted-foreground",
 };
 
+const PAGE_SIZE = 10;
+
 export default function BillsPage() {
   const [bills, setBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     listBills()
       .then(setBills)
       .finally(() => setLoading(false));
   }, []);
+
+  const pageCount = Math.max(1, Math.ceil(bills.length / PAGE_SIZE));
+  const safePage = Math.min(page, pageCount);
+  const visibleBills = bills.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   return (
     <AppShell title="Bills" nav={<VendorNav />}>
@@ -56,7 +64,7 @@ export default function BillsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {bills.map((b) => (
+                  {visibleBills.map((b) => (
                     <tr key={b.id} className="border-t border-border">
                       <td className="px-5 py-3">
                         <Link href={`/dashboard/bills/${b.id}`} className="font-medium text-brand-700 hover:underline">
@@ -87,6 +95,7 @@ export default function BillsPage() {
             </div>
           )}
         </CardContent>
+        <Pagination page={safePage} pageCount={pageCount} onPageChange={setPage} />
       </Card>
     </AppShell>
   );

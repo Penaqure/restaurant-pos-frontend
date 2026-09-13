@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import AppShell from "@/components/layout/AppShell";
 import PlatformNav from "@/components/layout/PlatformNav";
-import { createVendor, CURRENCY_OPTIONS, TIMEZONE_OPTIONS } from "@/services/vendorService";
+import { createVendor, CURRENCY_OPTIONS, COUNTRY_OPTIONS, TIMEZONE_OPTIONS } from "@/services/vendorService";
 import { Card, CardContent } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -18,6 +18,7 @@ const initialForm = {
   gstin: "",
   branchName: "",
   currency: "INR",
+  country: "IN",
   timezone: "Asia/Kolkata",
   invoicePrefix: "INV",
   defaultTaxRatePercent: "0",
@@ -84,6 +85,16 @@ export default function NewVendorPage() {
             ))}
 
             <div className="grid gap-4 border-t border-border pt-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Country</label>
+                <Select value={form.country} onChange={update("country")}>
+                  {COUNTRY_OPTIONS.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.label}
+                    </option>
+                  ))}
+                </Select>
+              </div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-foreground">Currency</label>
                 <Select value={form.currency} onChange={update("currency")}>

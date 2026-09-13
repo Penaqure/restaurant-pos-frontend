@@ -13,6 +13,9 @@ import Input from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import UsageBar from "@/components/ui/UsageBar";
+import Pagination from "@/components/ui/Pagination";
+
+const PAGE_SIZE = 10;
 
 const emptyForm = { name: "", address: "", city: "", phone: "", gstin: "" };
 
@@ -26,6 +29,7 @@ export default function BranchesPage() {
   const [statusTarget, setStatusTarget] = useState<Branch | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Branch | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [page, setPage] = useState(1);
 
   function refresh() {
     return listBranches()
@@ -122,6 +126,9 @@ export default function BranchesPage() {
   }
 
   const planLimits = user?.vendor?.planLimits;
+  const pageCount = Math.max(1, Math.ceil(branches.length / PAGE_SIZE));
+  const safePage = Math.min(page, pageCount);
+  const visibleBranches = branches.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   return (
     <AppShell title="Branches" nav={<VendorNav />}>
@@ -164,7 +171,7 @@ export default function BranchesPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {branches.map((b) => (
+                      {visibleBranches.map((b) => (
                         <tr key={b.id} className={`border-t border-border ${editingId === b.id ? "bg-brand-50/50" : ""}`}>
                           <td className="px-5 py-3 font-medium text-foreground">{b.name}</td>
                           <td className="px-5 py-3 text-muted-foreground">
@@ -215,6 +222,7 @@ export default function BranchesPage() {
                 </div>
               )}
             </CardContent>
+            <Pagination page={safePage} pageCount={pageCount} onPageChange={setPage} />
           </Card>
         </div>
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { toast } from "react-toastify";
 import { ImageOff, Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
@@ -19,7 +19,19 @@ import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 
 export default function PosPage() {
+  return (
+    <Suspense fallback={null}>
+      <PosPageInner />
+    </Suspense>
+  );
+}
+
+function PosPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // Tapping a table on the Tables page deep-links here so a waiter skips
+  // straight to picking items instead of hunting for the table in a dropdown.
+  const preselectedTableId = searchParams.get("tableId") || "";
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [items, setItems] = useState<MenuItem[]>([]);
   const [tables, setTables] = useState<RestaurantTable[]>([]);
@@ -27,7 +39,7 @@ export default function PosPage() {
   const [pickerItem, setPickerItem] = useState<MenuItem | null>(null);
   const [cart, setCart] = useState<CartLine[]>([]);
   const [orderType, setOrderType] = useState<OrderType>("dine_in");
-  const [tableId, setTableId] = useState("");
+  const [tableId, setTableId] = useState(preselectedTableId);
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -37,6 +49,8 @@ export default function PosPage() {
     listItems().then(setItems);
     listTables().then(setTables);
   }, []);
+
+  const preselectedTable = tables.find((t) => t.id === preselectedTableId);
 
   const visibleItems = items.filter((i) => i.isAvailable && (activeCategory === "all" || i.categoryId === activeCategory));
 
@@ -161,6 +175,13 @@ export default function PosPage() {
 
         <Card className="h-fit">
           <CardContent className="space-y-4">
+            {preselectedTable && orderType === "dine_in" && tableId === preselectedTableId ? (
+              <div className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-700">
+                Ordering for <span className="font-semibold">{preselectedTable.name}</span>
+                {preselectedTable.location && ` · ${preselectedTable.location}`}
+              </div>
+            ) : null}
+
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">Order type</label>
               <Select value={orderType} onChange={(e) => setOrderType(e.target.value as OrderType)}>
@@ -177,24 +198,30 @@ export default function PosPage() {
                   <option value="">Select a table</option>
                   {tables.map((t) => (
                     <option key={t.id} value={t.id}>
-                      {t.name} ({t.status})
+                      {t.name}
+                      {t.location ? ` (${t.location})` : ""} — {t.status}
                     </option>
                   ))}
                 </Select>
               </div>
             )}
 
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">
+                Customer name {orderType === "dine_in" && <span className="text-muted-foreground">(optional)</span>}
+              </label>
+              <Input
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder={orderType === "dine_in" ? "Helps tell apart multiple orders on this table" : undefined}
+              />
+            </div>
+
             {orderType !== "dine_in" && (
-              <>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-foreground">Customer name</label>
-                  <Input value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-foreground">Phone</label>
-                  <Input value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} />
-                </div>
-              </>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Phone</label>
+                <Input value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} />
+              </div>
             )}
 
             <div className="border-t border-border pt-3">

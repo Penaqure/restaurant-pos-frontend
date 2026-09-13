@@ -5,14 +5,22 @@ import { toast } from "react-toastify";
 import { Loader2, Pencil, Percent, Plus, Trash2 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import VendorNav from "@/components/layout/VendorNav";
+import { useAuth } from "@/context/AuthContext";
 import { listDiscounts, createDiscount, updateDiscount, deleteDiscount, Discount } from "@/services/discountService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import Pagination from "@/components/ui/Pagination";
+
+const PAGE_SIZE = 10;
 
 export default function DiscountsPage() {
+  const { user } = useAuth();
+  // Mirrors the backend's canManage gate -- cashier can view discounts but
+  // not create/edit/delete them.
+  const canManage = user?.role === "owner" || user?.role === "manager";
   const [discounts, setDiscounts] = useState<Discount[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -24,6 +32,7 @@ export default function DiscountsPage() {
   const [deleteTarget, setDeleteTarget] = useState<Discount | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [forbidden, setForbidden] = useState(false);
+  const [page, setPage] = useState(1);
 
   function refresh() {
     return listDiscounts()
@@ -111,9 +120,13 @@ export default function DiscountsPage() {
     );
   }
 
+  const pageCount = Math.max(1, Math.ceil(discounts.length / PAGE_SIZE));
+  const safePage = Math.min(page, pageCount);
+  const visibleDiscounts = discounts.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
   return (
     <AppShell title="Discounts" nav={<VendorNav />}>
-      <div className="grid gap-6 md:grid-cols-[2fr_1fr]">
+      <div className={canManage ? "grid gap-6 md:grid-cols-[2fr_1fr]" : ""}>
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -142,7 +155,7 @@ export default function DiscountsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {discounts.map((d) => (
+                    {visibleDiscounts.map((d) => (
                       <tr key={d.id} className={`border-t border-border ${editingId === d.id ? "bg-brand-50/50" : ""}`}>
                         <td className="px-5 py-3 font-medium text-foreground">{d.code}</td>
                         <td className="px-5 py-3 text-muted-foreground">
@@ -153,24 +166,26 @@ export default function DiscountsPage() {
                           {d.usageCount}
                           {d.usageLimit ? ` / ${d.usageLimit}` : ""}
                         </td>
-                        <td className="px-5 py-3">
-                          <div className="flex justify-end gap-1">
-                            <button
-                              onClick={() => startEdit(d)}
-                              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-brand-700 hover:bg-brand-50"
-                            >
-                              <Pencil className="size-3.5" />
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => setDeleteTarget(d)}
-                              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-danger hover:bg-red-50"
-                            >
-                              <Trash2 className="size-3.5" />
-                              Delete
-                            </button>
-                          </div>
-                        </td>
+                        {canManage && (
+                          <td className="px-5 py-3">
+                            <div className="flex justify-end gap-1">
+                              <button
+                                onClick={() => startEdit(d)}
+                                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-brand-700 hover:bg-brand-50"
+                              >
+                                <Pencil className="size-3.5" />
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => setDeleteTarget(d)}
+                                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-danger hover:bg-red-50"
+                              >
+                                <Trash2 className="size-3.5" />
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
@@ -178,73 +193,76 @@ export default function DiscountsPage() {
               </div>
             )}
           </CardContent>
+          <Pagination page={safePage} pageCount={pageCount} onPageChange={setPage} />
         </Card>
 
-        <Card className="h-fit">
-          <CardHeader>
-            <CardTitle>{editingId ? "Edit discount code" : "Add discount code"}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-foreground">Code</label>
-                <Input
-                  required
-                  disabled={!!editingId}
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.toUpperCase())}
-                  className="uppercase"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-foreground">Type</label>
-                <Select
-                  disabled={!!editingId}
-                  value={type}
-                  onChange={(e) => setType(e.target.value as "percentage" | "flat")}
-                >
-                  <option value="percentage">Percentage off</option>
-                  <option value="flat">Flat amount off</option>
-                </Select>
-                {editingId && <p className="text-xs text-muted-foreground">Code and type can&apos;t be changed after creation.</p>}
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-foreground">
-                  Value {type === "percentage" ? "(%)" : "(₹)"}
-                </label>
-                <Input
-                  required
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={value}
-                  onChange={(e) => setValue(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-foreground">Minimum order amount (₹)</label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={minOrderAmount}
-                  onChange={(e) => setMinOrderAmount(e.target.value)}
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button type="submit" loading={submitting} className="flex-1">
-                  {!submitting && <Plus className="size-4" />}
-                  {submitting ? "Saving..." : editingId ? "Update discount" : "Add discount"}
-                </Button>
-                {editingId && (
-                  <Button type="button" variant="secondary" onClick={resetForm}>
-                    Cancel
+        {canManage && (
+          <Card className="h-fit">
+            <CardHeader>
+              <CardTitle>{editingId ? "Edit discount code" : "Add discount code"}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-3">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-foreground">Code</label>
+                  <Input
+                    required
+                    disabled={!!editingId}
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.toUpperCase())}
+                    className="uppercase"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-foreground">Type</label>
+                  <Select
+                    disabled={!!editingId}
+                    value={type}
+                    onChange={(e) => setType(e.target.value as "percentage" | "flat")}
+                  >
+                    <option value="percentage">Percentage off</option>
+                    <option value="flat">Flat amount off</option>
+                  </Select>
+                  {editingId && <p className="text-xs text-muted-foreground">Code and type can&apos;t be changed after creation.</p>}
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-foreground">
+                    Value {type === "percentage" ? "(%)" : "(₹)"}
+                  </label>
+                  <Input
+                    required
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-foreground">Minimum order amount (₹)</label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={minOrderAmount}
+                    onChange={(e) => setMinOrderAmount(e.target.value)}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button type="submit" loading={submitting} className="flex-1">
+                    {!submitting && <Plus className="size-4" />}
+                    {submitting ? "Saving..." : editingId ? "Update discount" : "Add discount"}
                   </Button>
-                )}
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+                  {editingId && (
+                    <Button type="button" variant="secondary" onClick={resetForm}>
+                      Cancel
+                    </Button>
+                  )}
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {deleteTarget && (

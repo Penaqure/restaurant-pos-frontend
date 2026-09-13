@@ -16,6 +16,7 @@ import {
   Vendor,
   SubscriptionPlan,
   CURRENCY_OPTIONS,
+  COUNTRY_OPTIONS,
   TIMEZONE_OPTIONS,
 } from "@/services/vendorService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -55,6 +56,7 @@ export default function VendorDetailPage(props: PageProps<"/platform/vendors/[ve
     planId: "",
     planStatus: "trial" as Vendor["planStatus"],
     currency: "INR",
+    country: "IN",
     timezone: "Asia/Kolkata",
     invoicePrefix: "INV",
     defaultTaxRatePercent: "0",
@@ -73,6 +75,7 @@ export default function VendorDetailPage(props: PageProps<"/platform/vendors/[ve
         planId: v.planId || "",
         planStatus: v.planStatus,
         currency: v.currency,
+        country: v.country,
         timezone: v.timezone,
         invoicePrefix: v.invoicePrefix,
         defaultTaxRatePercent: v.defaultTaxRatePercent,
@@ -98,6 +101,7 @@ export default function VendorDetailPage(props: PageProps<"/platform/vendors/[ve
         planId: form.planId || null,
         planStatus: form.planStatus,
         currency: form.currency,
+        country: form.country,
         timezone: form.timezone,
         invoicePrefix: form.invoicePrefix,
         defaultTaxRatePercent: Number(form.defaultTaxRatePercent),
@@ -179,7 +183,8 @@ export default function VendorDetailPage(props: PageProps<"/platform/vendors/[ve
 
   return (
     <AppShell title={vendor.name} nav={<PlatformNav />}>
-      <div className="grid max-w-3xl gap-6">
+      <div className="grid gap-6 lg:grid-cols-[2fr_1fr] lg:items-start">
+      <div className="space-y-6">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -259,6 +264,19 @@ export default function VendorDetailPage(props: PageProps<"/platform/vendors/[ve
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Country</label>
+                <Select value={form.country} onChange={(e) => setForm((f) => ({ ...f, country: e.target.value }))}>
+                  {COUNTRY_OPTIONS.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.label}
+                    </option>
+                  ))}
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Drives tax formatting on bills — India shows GST split as CGST/SGST.
+                </p>
+              </div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-foreground">Currency</label>
                 <Select value={form.currency} onChange={(e) => setForm((f) => ({ ...f, currency: e.target.value }))}>
@@ -354,13 +372,17 @@ export default function VendorDetailPage(props: PageProps<"/platform/vendors/[ve
             )}
           </CardContent>
         </Card>
+      </div>
 
-        <div className="flex items-center gap-3">
-          <Button onClick={handleSave} loading={saving}>
-            {saving ? "Saving..." : "Save changes"}
-          </Button>
-          <Badge tone={vendor.isActive ? "success" : "danger"}>{vendor.isActive ? "Active" : "Disabled"}</Badge>
-        </div>
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="flex items-center justify-between gap-3">
+            <Badge tone={vendor.isActive ? "success" : "danger"}>{vendor.isActive ? "Active" : "Disabled"}</Badge>
+            <Button onClick={handleSave} loading={saving}>
+              {saving ? "Saving..." : "Save changes"}
+            </Button>
+          </CardContent>
+        </Card>
 
         <Card className="border-red-200">
           <CardHeader>
@@ -408,6 +430,7 @@ export default function VendorDetailPage(props: PageProps<"/platform/vendors/[ve
             </div>
           </CardContent>
         </Card>
+      </div>
       </div>
 
       {confirmAction === "disable" && (

@@ -18,6 +18,7 @@ import {
   ReceiptText,
   ShoppingCart,
   ClipboardList,
+  ChefHat,
   Grid3x3,
   Wallet,
   TrendingUp,
@@ -41,9 +42,10 @@ function formatShortDate(iso: string) {
 }
 
 const QUICK_LINKS = [
-  { href: "/dashboard/pos", label: "POS", icon: ShoppingCart, roles: undefined as string[] | undefined },
-  { href: "/dashboard/orders", label: "Orders", icon: ClipboardList, roles: undefined },
-  { href: "/dashboard/tables", label: "Tables", icon: Grid3x3, roles: undefined },
+  { href: "/dashboard/pos", label: "POS", icon: ShoppingCart, roles: ["owner", "manager", "cashier"] as string[] | undefined },
+  { href: "/dashboard/kitchen", label: "Kitchen", icon: ChefHat, roles: ["owner", "manager", "kitchen"] },
+  { href: "/dashboard/orders", label: "Orders", icon: ClipboardList, roles: ["owner", "manager", "cashier", "waiter"] },
+  { href: "/dashboard/tables", label: "Tables", icon: Grid3x3, roles: ["owner", "manager", "cashier", "waiter"] },
   { href: "/dashboard/bills", label: "Bills", icon: ReceiptText, roles: ["owner", "manager", "cashier"] },
 ];
 

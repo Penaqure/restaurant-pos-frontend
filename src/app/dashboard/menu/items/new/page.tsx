@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import { Plus, Trash2 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import VendorNav from "@/components/layout/VendorNav";
+import { useAuth } from "@/context/AuthContext";
 import {
   listCategories,
   listTaxRates,
@@ -23,6 +24,8 @@ type AddonRow = { name: string; price: string };
 
 export default function NewMenuItemPage() {
   const router = useRouter();
+  const { user } = useAuth();
+  const canManage = user?.role === "owner" || user?.role === "manager";
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [taxRates, setTaxRates] = useState<TaxRate[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -86,6 +89,16 @@ export default function NewMenuItemPage() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (!canManage) {
+    return (
+      <AppShell title="New menu item" nav={<VendorNav />}>
+        <p className="text-sm text-muted-foreground">
+          Your role doesn&apos;t have access to menu management. Ask an owner or manager if you need this.
+        </p>
+      </AppShell>
+    );
   }
 
   return (

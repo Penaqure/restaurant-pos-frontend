@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import { ImageOff, Loader2, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import VendorNav from "@/components/layout/VendorNav";
+import { useAuth } from "@/context/AuthContext";
 import {
   getItem,
   updateItem,
@@ -38,6 +39,8 @@ const emptyAddonForm = { name: "", price: "" };
 export default function MenuItemDetailPage(props: PageProps<"/dashboard/menu/items/[itemId]">) {
   const { itemId } = use(props.params);
   const router = useRouter();
+  const { user } = useAuth();
+  const canManage = user?.role === "owner" || user?.role === "manager";
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [item, setItem] = useState<MenuItem | null>(null);
@@ -205,52 +208,20 @@ export default function MenuItemDetailPage(props: PageProps<"/dashboard/menu/ite
     );
   }
 
+  if (!canManage) {
+    return (
+      <AppShell title={item.name} nav={<VendorNav />}>
+        <p className="text-sm text-muted-foreground">
+          Your role doesn&apos;t have access to menu management. Ask an owner or manager if you need this.
+        </p>
+      </AppShell>
+    );
+  }
+
   return (
     <AppShell title={item.name} nav={<VendorNav />}>
-      <div className="grid max-w-3xl gap-6">
-        <Card>
-          <CardContent className="flex gap-4">
-            <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-md bg-black/5 text-muted-foreground">
-              {item.imageUrl ? (
-                <Image
-                  src={`${API_ORIGIN}${item.imageUrl}`}
-                  alt={item.name}
-                  width={96}
-                  height={96}
-                  className="h-24 w-24 object-cover"
-                  unoptimized
-                />
-              ) : (
-                <ImageOff className="size-6" />
-              )}
-            </div>
-            <div className="flex-1 space-y-1">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">
-                  {item.isAvailable ? "Available" : "Unavailable"} on POS
-                </p>
-                <button
-                  onClick={() => setDeleteItemConfirm(true)}
-                  className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm text-danger hover:bg-red-50"
-                >
-                  <Trash2 className="size-3.5" />
-                  Delete item
-                </button>
-              </div>
-              <div className="flex items-center gap-3 pt-1">
-                <Button variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()}>
-                  <Upload className="size-3.5" />
-                  {item.imageUrl ? "Replace image" : "Upload image"}
-                </Button>
-                <input ref={fileInputRef} type="file" accept="image/*" hidden onChange={handleImageChange} />
-                <Button variant="secondary" size="sm" onClick={toggleAvailability}>
-                  {item.isAvailable ? "Mark unavailable" : "Mark available"}
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
+      <div className="grid gap-6 lg:grid-cols-[2fr_1fr] lg:items-start">
+      <div className="space-y-6">
         <Card>
           <CardHeader>
             <CardTitle>Item details</CardTitle>
@@ -472,6 +443,46 @@ export default function MenuItemDetailPage(props: PageProps<"/dashboard/menu/ite
             </form>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="space-y-3">
+            <div className="flex h-40 w-full items-center justify-center overflow-hidden rounded-md bg-black/5 text-muted-foreground">
+              {item.imageUrl ? (
+                <Image
+                  src={`${API_ORIGIN}${item.imageUrl}`}
+                  alt={item.name}
+                  width={320}
+                  height={160}
+                  className="h-40 w-full object-cover"
+                  unoptimized
+                />
+              ) : (
+                <ImageOff className="size-6" />
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground">{item.isAvailable ? "Available" : "Unavailable"} on POS</p>
+            <div className="space-y-2">
+              <Button variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()} className="w-full">
+                <Upload className="size-3.5" />
+                {item.imageUrl ? "Replace image" : "Upload image"}
+              </Button>
+              <input ref={fileInputRef} type="file" accept="image/*" hidden onChange={handleImageChange} />
+              <Button variant="secondary" size="sm" onClick={toggleAvailability} className="w-full">
+                {item.isAvailable ? "Mark unavailable" : "Mark available"}
+              </Button>
+              <button
+                onClick={() => setDeleteItemConfirm(true)}
+                className="flex w-full items-center justify-center gap-1 rounded-md px-2 py-1.5 text-sm text-danger hover:bg-red-50"
+              >
+                <Trash2 className="size-3.5" />
+                Delete item
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
       </div>
 
       {deleteItemConfirm && (

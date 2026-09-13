@@ -22,6 +22,7 @@ export type Vendor = {
   logoUrl: string | null;
   brandColor: string;
   currency: string;
+  country: string;
   timezone: string;
   invoicePrefix: string;
   defaultTaxRatePercent: string;
@@ -40,6 +41,19 @@ export const CURRENCY_OPTIONS = [
   { code: "SGD", label: "SGD — Singapore Dollar" },
   { code: "AUD", label: "AUD — Australian Dollar" },
   { code: "CAD", label: "CAD — Canadian Dollar" },
+];
+
+// Drives how tax is presented on bills -- India shows GST split into
+// CGST/SGST; everywhere else gets a plain tax line.
+export const COUNTRY_OPTIONS = [
+  { code: "IN", label: "India" },
+  { code: "US", label: "United States" },
+  { code: "GB", label: "United Kingdom" },
+  { code: "AE", label: "United Arab Emirates" },
+  { code: "SG", label: "Singapore" },
+  { code: "AU", label: "Australia" },
+  { code: "CA", label: "Canada" },
+  { code: "OTHER", label: "Other" },
 ];
 
 export const TIMEZONE_OPTIONS = [
@@ -74,6 +88,7 @@ export type UpdateVendorPayload = Partial<{
   brandColor: string;
   isActive: boolean;
   currency: string;
+  country: string;
   timezone: string;
   invoicePrefix: string;
   defaultTaxRatePercent: number;
@@ -104,6 +119,7 @@ export type CreateVendorPayload = {
   gstin?: string;
   branchName?: string;
   currency?: string;
+  country?: string;
   timezone?: string;
   invoicePrefix?: string;
   defaultTaxRatePercent?: number;

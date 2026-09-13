@@ -3,14 +3,18 @@
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-import { Loader2, Receipt, X } from "lucide-react";
+import { ArrowRightLeft, Loader2, Plus, Receipt, X } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import VendorNav from "@/components/layout/VendorNav";
-import { getOrder, updateOrderStatus, Order, OrderStatus } from "@/services/orderService";
+import { useAuth } from "@/context/AuthContext";
+import { getOrder, updateOrderStatus, transferOrderTable, Order, OrderStatus } from "@/services/orderService";
 import { generateBillFromOrder } from "@/services/billService";
+import { listTables, RestaurantTable } from "@/services/tableService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
+import AddItemsModal from "@/components/orders/AddItemsModal";
 
 const FLOW: OrderStatus[] = ["placed", "preparing", "ready", "served", "completed"];
 const NEXT: Partial<Record<OrderStatus, OrderStatus>> = {
@@ -19,15 +23,25 @@ const NEXT: Partial<Record<OrderStatus, OrderStatus>> = {
   ready: "served",
   served: "completed",
 };
+// Once an order is served it can no longer be cancelled (mirrors
+// ORDER_STATUS_TRANSITIONS on the backend, which only allows served -> completed).
+const CANCELLABLE_STATUSES: OrderStatus[] = ["placed", "preparing", "ready"];
 
 export default function OrderDetailPage(props: PageProps<"/dashboard/orders/[orderId]">) {
   const { orderId } = use(props.params);
   const router = useRouter();
+  const { user } = useAuth();
+  // Mirrors the backend's canBill gate -- waiters can't generate bills at all.
+  const canBill = user?.role === "owner" || user?.role === "manager" || user?.role === "cashier";
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [discountCode, setDiscountCode] = useState("");
   const [billing, setBilling] = useState(false);
+  const [tables, setTables] = useState<RestaurantTable[]>([]);
+  const [targetTableId, setTargetTableId] = useState("");
+  const [transferring, setTransferring] = useState(false);
+  const [addingItems, setAddingItems] = useState(false);
 
   function refresh() {
     return getOrder(orderId)
@@ -37,6 +51,7 @@ export default function OrderDetailPage(props: PageProps<"/dashboard/orders/[ord
 
   useEffect(() => {
     refresh();
+    listTables().then(setTables).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId]);
 
@@ -67,6 +82,22 @@ export default function OrderDetailPage(props: PageProps<"/dashboard/orders/[ord
       toast.error("Could not cancel order");
     } finally {
       setUpdating(false);
+    }
+  }
+
+  async function handleTransfer() {
+    if (!order || !targetTableId) return;
+    setTransferring(true);
+    try {
+      const updated = await transferOrderTable(order.id, targetTableId);
+      setOrder(updated);
+      setTargetTableId("");
+      toast.success(`Order moved to ${updated.table?.name}`);
+    } catch (err) {
+      const message = (err as { response?: { data?: { message?: string } } }).response?.data?.message;
+      toast.error(message || "Could not move order");
+    } finally {
+      setTransferring(false);
     }
   }
 
@@ -103,10 +134,15 @@ export default function OrderDetailPage(props: PageProps<"/dashboard/orders/[ord
 
   const currentIndex = FLOW.indexOf(order.status);
   const isTerminal = order.status === "completed" || order.status === "cancelled";
+  const canCancel = CANCELLABLE_STATUSES.includes(order.status);
+  const canMoveTable = order.orderType === "dine_in" && !isTerminal;
+  const canGenerateBill = order.status === "completed" && canBill;
+  const hasSidebar = canMoveTable || canGenerateBill;
 
   return (
     <AppShell title={order.orderNumber} nav={<VendorNav />}>
-      <div className="grid max-w-2xl gap-6">
+      <div className={hasSidebar ? "grid gap-6 lg:grid-cols-[2fr_1fr] lg:items-start" : "grid gap-6"}>
+      <div className="space-y-6">
         <Card>
           <CardContent>
             <div className="flex items-center justify-between">
@@ -121,7 +157,7 @@ export default function OrderDetailPage(props: PageProps<"/dashboard/orders/[ord
                     : `Self-ordered via QR code${order.customerName ? ` by ${order.customerName}` : ""}`}
                 </p>
               </div>
-              {!isTerminal && (
+              {canCancel && (
                 <button
                   onClick={cancel}
                   disabled={updating}
@@ -160,33 +196,15 @@ export default function OrderDetailPage(props: PageProps<"/dashboard/orders/[ord
           </CardContent>
         </Card>
 
-        {order.status === "completed" && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Receipt className="size-4 text-muted-foreground" />
-                Generate bill
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2">
-                <Input
-                  placeholder="Discount code (optional)"
-                  value={discountCode}
-                  onChange={(e) => setDiscountCode(e.target.value)}
-                  className="flex-1 uppercase"
-                />
-                <Button onClick={handleGenerateBill} loading={billing}>
-                  {billing ? "Generating..." : "Generate bill"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         <Card>
           <CardHeader>
             <CardTitle>Items</CardTitle>
+            {!isTerminal && (
+              <Button variant="secondary" size="sm" onClick={() => setAddingItems(true)}>
+                <Plus className="size-3.5" />
+                Add items
+              </Button>
+            )}
           </CardHeader>
           <CardContent>
             <ul className="divide-y divide-border">
@@ -226,6 +244,68 @@ export default function OrderDetailPage(props: PageProps<"/dashboard/orders/[ord
           </CardContent>
         </Card>
       </div>
+
+      {hasSidebar && (
+        <div className="space-y-6">
+          {canMoveTable && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ArrowRightLeft className="size-4 text-muted-foreground" />
+                  Move to another table
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2">
+                  <Select value={targetTableId} onChange={(e) => setTargetTableId(e.target.value)} className="flex-1">
+                    <option value="">Select a table</option>
+                    {tables
+                      .filter((t) => t.id !== order.table?.id)
+                      .map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.name}
+                          {t.location ? ` (${t.location})` : ""} — {t.status}
+                        </option>
+                      ))}
+                  </Select>
+                  <Button onClick={handleTransfer} loading={transferring} disabled={!targetTableId}>
+                    {transferring ? "Moving..." : "Move"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {canGenerateBill && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Receipt className="size-4 text-muted-foreground" />
+                  Generate bill
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2">
+                  <Input
+                    placeholder="Discount code (optional)"
+                    value={discountCode}
+                    onChange={(e) => setDiscountCode(e.target.value)}
+                    className="flex-1 uppercase"
+                  />
+                  <Button onClick={handleGenerateBill} loading={billing}>
+                    {billing ? "Generating..." : "Generate bill"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+      </div>
+
+      {addingItems && (
+        <AddItemsModal orderId={order.id} onClose={() => setAddingItems(false)} onAdded={refresh} />
+      )}
     </AppShell>
   );
 }

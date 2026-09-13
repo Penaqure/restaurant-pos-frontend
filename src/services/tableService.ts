@@ -3,6 +3,7 @@ import axiosInstance from "@/lib/axiosInstance";
 export type RestaurantTable = {
   id: string;
   name: string;
+  location: string | null;
   capacity: number;
   status: "available" | "occupied" | "reserved" | "cleaning";
   branch: { id: string; name: string };
@@ -13,7 +14,7 @@ export async function listTables() {
   return data;
 }
 
-export async function createTable(payload: { name: string; capacity?: number }) {
+export async function createTable(payload: { name: string; capacity?: number; location?: string }) {
   const { data } = await axiosInstance.post<RestaurantTable>("/tables", payload);
   return data;
 }
@@ -23,7 +24,7 @@ export async function updateTableStatus(id: string, status: RestaurantTable["sta
   return data;
 }
 
-export async function updateTable(id: string, payload: { name?: string; capacity?: number }) {
+export async function updateTable(id: string, payload: { name?: string; capacity?: number; location?: string }) {
   const { data } = await axiosInstance.patch<RestaurantTable>(`/tables/${id}`, payload);
   return data;
 }

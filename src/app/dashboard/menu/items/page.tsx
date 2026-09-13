@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Eye, ImageOff, Loader2, Plus, Search } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import VendorNav from "@/components/layout/VendorNav";
+import { useAuth } from "@/context/AuthContext";
 import { listCategories, listItems, MenuCategory, MenuItem } from "@/services/menuService";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -16,6 +17,11 @@ const API_ORIGIN = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/api\/
 type VegFilter = "all" | "veg" | "non-veg";
 
 export default function MenuItemsPage() {
+  const { user } = useAuth();
+  // Mirrors the backend's canManageMenu gate (owner/manager only) -- the item
+  // detail page is pure edit/delete UI with no read-only mode, so other
+  // roles never get a link into it.
+  const canManage = user?.role === "owner" || user?.role === "manager";
   const [items, setItems] = useState<MenuItem[]>([]);
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,12 +61,14 @@ export default function MenuItemsPage() {
             className="pl-9"
           />
         </div>
-        <Link href="/dashboard/menu/items/new" className="shrink-0">
-          <Button className="w-full sm:w-auto">
-            <Plus className="size-4" />
-            New item
-          </Button>
-        </Link>
+        {canManage && (
+          <Link href="/dashboard/menu/items/new" className="shrink-0">
+            <Button className="w-full sm:w-auto">
+              <Plus className="size-4" />
+              New item
+            </Button>
+          </Link>
+        )}
       </div>
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -164,12 +172,14 @@ export default function MenuItemsPage() {
                     </Badge>
                   )}
                 </div>
-                <Link href={`/dashboard/menu/items/${item.id}`} className="mt-1.5 block">
-                  <Button variant="secondary" size="sm" className="w-full">
-                    <Eye className="size-3.5" />
-                    View
-                  </Button>
-                </Link>
+                {canManage && (
+                  <Link href={`/dashboard/menu/items/${item.id}`} className="mt-1.5 block">
+                    <Button variant="secondary" size="sm" className="w-full">
+                      <Eye className="size-3.5" />
+                      View
+                    </Button>
+                  </Link>
+                )}
               </div>
             </div>
           ))}

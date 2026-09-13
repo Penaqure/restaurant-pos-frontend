@@ -16,6 +16,9 @@ import Select from "@/components/ui/Select";
 import { Badge } from "@/components/ui/Badge";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import UsageBar from "@/components/ui/UsageBar";
+import Pagination from "@/components/ui/Pagination";
+
+const PAGE_SIZE = 10;
 
 const emptyForm = {
   firstName: "",
@@ -39,6 +42,7 @@ export default function StaffPage() {
   const [statusTarget, setStatusTarget] = useState<StaffMember | null>(null);
   const [statusLoading, setStatusLoading] = useState(false);
   const [forbidden, setForbidden] = useState(false);
+  const [page, setPage] = useState(1);
 
   function refresh() {
     return Promise.all([listStaff(), listRoles(), listBranches()])
@@ -133,6 +137,10 @@ export default function StaffPage() {
     }
   }
 
+  const pageCount = Math.max(1, Math.ceil(staff.length / PAGE_SIZE));
+  const safePage = Math.min(page, pageCount);
+  const visibleStaff = staff.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
   if (forbidden) {
     return (
       <AppShell title="Staff" nav={<VendorNav />}>
@@ -185,7 +193,7 @@ export default function StaffPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {staff.map((s) => (
+                    {visibleStaff.map((s) => (
                       <tr key={s.id} className={`border-t border-border ${editingId === s.id ? "bg-brand-50/50" : ""}`}>
                         <td className="px-5 py-3 font-medium text-foreground">
                           {s.firstName} {s.lastName}
@@ -225,6 +233,7 @@ export default function StaffPage() {
               </div>
             )}
           </CardContent>
+          <Pagination page={safePage} pageCount={pageCount} onPageChange={setPage} />
         </Card>
         </div>
 
