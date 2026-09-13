@@ -27,4 +27,8 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
 EXPOSE 3000
+
+HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=5 \
+  CMD node -e "require('http').get('http://localhost:3000', (r) => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))"
+
 CMD ["node", "server.js"]
