@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, FormEvent } from "react";
+import { useEffect, useMemo, useState, FormEvent } from "react";
 import { toast } from "react-toastify";
 import { LayoutGrid, Loader2, Pencil, Plus, Trash2, UtensilsCrossed } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
@@ -10,8 +10,17 @@ import { listCategories, listItems, createCategory, updateCategory, deleteCatego
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
 import { Badge } from "@/components/ui/Badge";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import SearchInput from "@/components/ui/SearchInput";
+
+const SORT_OPTIONS = [
+  { value: "name-asc", label: "Name: A to Z" },
+  { value: "name-desc", label: "Name: Z to A" },
+  { value: "items-desc", label: "Most items" },
+] as const;
+type SortOption = (typeof SORT_OPTIONS)[number]["value"];
 
 // A stable color per category (derived from its id) so a category's swatch
 // never shifts on refresh, without needing an actual color/image field on
@@ -46,6 +55,8 @@ export default function CategoriesPage() {
   const [submitting, setSubmitting] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<MenuCategory | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<SortOption>("name-asc");
 
   function refresh() {
     return Promise.all([listCategories(), listItems()])
@@ -115,6 +126,18 @@ export default function CategoriesPage() {
     }
   }
 
+  const filteredCategories = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    const result = categories.filter(
+      (c) => !query || c.name.toLowerCase().includes(query) || (c.description || "").toLowerCase().includes(query)
+    );
+    result.sort((a, b) => {
+      if (sort === "items-desc") return (itemCounts[b.id] || 0) - (itemCounts[a.id] || 0);
+      return sort === "name-desc" ? b.name.localeCompare(a.name) : a.name.localeCompare(b.name);
+    });
+    return result;
+  }, [categories, search, sort, itemCounts]);
+
   return (
     <AppShell title="Menu categories" nav={<VendorNav />}>
       <div className={canManage ? "grid gap-6 md:grid-cols-[2fr_1fr]" : ""}>
@@ -126,6 +149,21 @@ export default function CategoriesPage() {
             </CardTitle>
             <Badge tone="brand">{categories.length}</Badge>
           </CardHeader>
+          <CardContent className="flex flex-col gap-3 border-b border-border sm:flex-row sm:flex-wrap sm:items-center">
+            <SearchInput
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search categories..."
+              className="sm:max-w-xs sm:flex-1"
+            />
+            <Select value={sort} onChange={(e) => setSort(e.target.value as SortOption)} className="sm:w-auto">
+              {SORT_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </Select>
+          </CardContent>
           <CardContent className={categories.length > 0 ? "" : "p-0"}>
             {loading ? (
               <div className="flex items-center gap-2 p-1 text-sm text-muted-foreground">
@@ -134,9 +172,11 @@ export default function CategoriesPage() {
               </div>
             ) : categories.length === 0 ? (
               <p className="p-6 text-sm text-muted-foreground">No categories yet — add one to get started.</p>
+            ) : filteredCategories.length === 0 ? (
+              <p className="p-6 text-sm text-muted-foreground">No categories match your search.</p>
             ) : (
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {categories.map((c) => (
+                {filteredCategories.map((c) => (
                   <div
                     key={c.id}
                     className={`group relative rounded-xl border p-4 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-card ${

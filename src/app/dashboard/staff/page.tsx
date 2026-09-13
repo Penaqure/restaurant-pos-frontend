@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, FormEvent } from "react";
+import { useEffect, useMemo, useState, FormEvent } from "react";
 import { toast } from "react-toastify";
 import { Loader2, Pencil, Plus, Power, UserPlus, Users } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
@@ -17,6 +17,13 @@ import { Badge } from "@/components/ui/Badge";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import UsageBar from "@/components/ui/UsageBar";
 import Pagination from "@/components/ui/Pagination";
+import SearchInput from "@/components/ui/SearchInput";
+
+const SORT_OPTIONS = [
+  { value: "name-asc", label: "Name: A to Z" },
+  { value: "name-desc", label: "Name: Z to A" },
+] as const;
+type SortOption = (typeof SORT_OPTIONS)[number]["value"];
 
 const PAGE_SIZE = 10;
 
@@ -43,6 +50,10 @@ export default function StaffPage() {
   const [statusLoading, setStatusLoading] = useState(false);
   const [forbidden, setForbidden] = useState(false);
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<StaffMember["status"] | "all">("all");
+  const [sort, setSort] = useState<SortOption>("name-asc");
 
   function refresh() {
     return Promise.all([listStaff(), listRoles(), listBranches()])
@@ -137,9 +148,38 @@ export default function StaffPage() {
     }
   }
 
-  const pageCount = Math.max(1, Math.ceil(staff.length / PAGE_SIZE));
+  function updateAndResetPage<T>(setter: (v: T) => void, value: T) {
+    setter(value);
+    setPage(1);
+  }
+
+  const filteredStaff = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    const result = staff.filter((s) => {
+      if (roleFilter !== "all" && s.role.name !== roleFilter) return false;
+      if (statusFilter !== "all" && s.status !== statusFilter) return false;
+      if (
+        query &&
+        !`${s.firstName} ${s.lastName}`.toLowerCase().includes(query) &&
+        !s.email.toLowerCase().includes(query)
+      ) {
+        return false;
+      }
+      return true;
+    });
+
+    result.sort((a, b) => {
+      const nameA = `${a.firstName} ${a.lastName}`.toLowerCase();
+      const nameB = `${b.firstName} ${b.lastName}`.toLowerCase();
+      return sort === "name-desc" ? nameB.localeCompare(nameA) : nameA.localeCompare(nameB);
+    });
+    return result;
+  }, [staff, search, roleFilter, statusFilter, sort]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredStaff.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount);
-  const visibleStaff = staff.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const visibleStaff = filteredStaff.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const roleOptions = Array.from(new Set(staff.map((s) => s.role.name)));
 
   if (forbidden) {
     return (
@@ -171,6 +211,38 @@ export default function StaffPage() {
             </CardTitle>
             <Badge tone="brand">{staff.length} member{staff.length === 1 ? "" : "s"}</Badge>
           </CardHeader>
+          <CardContent className="flex flex-col gap-3 border-b border-border sm:flex-row sm:flex-wrap sm:items-center">
+            <SearchInput
+              value={search}
+              onChange={(e) => updateAndResetPage(setSearch, e.target.value)}
+              placeholder="Search name or email..."
+              className="sm:max-w-xs sm:flex-1"
+            />
+            <Select value={roleFilter} onChange={(e) => updateAndResetPage(setRoleFilter, e.target.value)} className="sm:w-auto">
+              <option value="all">All roles</option>
+              {roleOptions.map((r) => (
+                <option key={r} value={r} className="capitalize">
+                  {r}
+                </option>
+              ))}
+            </Select>
+            <Select
+              value={statusFilter}
+              onChange={(e) => updateAndResetPage(setStatusFilter, e.target.value as StaffMember["status"] | "all")}
+              className="sm:w-auto"
+            >
+              <option value="all">All statuses</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </Select>
+            <Select value={sort} onChange={(e) => setSort(e.target.value as SortOption)} className="sm:w-auto">
+              {SORT_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </Select>
+          </CardContent>
           <CardContent className="p-0">
             {loading ? (
               <div className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
@@ -179,6 +251,8 @@ export default function StaffPage() {
               </div>
             ) : staff.length === 0 ? (
               <p className="p-6 text-sm text-muted-foreground">No staff yet — add one to get started.</p>
+            ) : filteredStaff.length === 0 ? (
+              <p className="p-6 text-sm text-muted-foreground">No staff match your search/filters.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">

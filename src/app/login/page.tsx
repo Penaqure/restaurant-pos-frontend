@@ -3,11 +3,27 @@
 import { useState, useEffect, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-import { AlertCircle, ChefHat, Lock, LogIn, Mail } from "lucide-react";
+import {
+  AlertCircle,
+  ChefHat,
+  ClipboardList,
+  IndianRupee,
+  Lock,
+  LogIn,
+  Mail,
+  Receipt,
+  ShieldCheck,
+} from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { getHomeRoute } from "@/lib/roleHome";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+
+const FEATURES = [
+  { icon: ClipboardList, label: "Orders and kitchen, in sync in real time" },
+  { icon: Receipt, label: "GST-ready bills, printed or handed off in seconds" },
+  { icon: ShieldCheck, label: "Role-based access for every member of staff" },
+];
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -52,76 +68,138 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative flex flex-1 items-center justify-center overflow-hidden p-6">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-32 left-1/2 h-96 w-[36rem] -translate-x-1/2 rounded-full bg-brand-300/30 blur-3xl"
-      />
+    <div className="flex flex-1 flex-col lg:flex-row">
+      {/* Left: brand / marketing panel -- hidden below lg, where there's no
+          room for it without pushing the actual sign-in form below the fold. */}
+      <div className="relative hidden overflow-hidden bg-gradient-to-br from-brand-700 via-brand-600 to-brand-900 lg:flex lg:w-1/2 lg:flex-col lg:justify-between lg:p-12 xl:p-16">
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="animate-blob absolute -left-24 -top-24 size-96 rounded-full bg-white/10 blur-3xl" />
+          <div
+            className="animate-blob absolute -bottom-32 -right-16 size-[28rem] rounded-full bg-brand-400/30 blur-3xl"
+            style={{ animationDelay: "-6s" }}
+          />
+          <div
+            className="animate-blob absolute right-1/3 top-1/4 size-64 rounded-full bg-accent/20 blur-3xl"
+            style={{ animationDelay: "-10s" }}
+          />
+        </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="relative w-full max-w-sm space-y-5 rounded-xl border border-border bg-surface-card p-8 shadow-card"
-      >
-        <div className="flex flex-col items-center gap-3 text-center">
-          <span className="flex size-11 items-center justify-center rounded-xl bg-brand-600 text-white shadow-pop">
-            <ChefHat className="size-6" />
+        <div className="relative flex items-center gap-2.5 text-white">
+          <span className="flex size-9 items-center justify-center rounded-lg bg-white/15 backdrop-blur-sm">
+            <ChefHat className="size-5" />
           </span>
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Welcome back</h1>
-            <p className="text-sm text-muted-foreground">Sign in to manage your restaurant</p>
+          <span className="text-sm font-semibold tracking-wide">RestroDesk</span>
+        </div>
+
+        <div className="relative">
+          <h1 className="max-w-md text-3xl font-bold leading-tight text-white xl:text-4xl">
+            Run every table, order, and bill from one screen.
+          </h1>
+          <p className="mt-3 max-w-sm text-sm text-white/70">
+            Built for restaurants that need their front-of-house, kitchen, and billing to actually talk to each
+            other.
+          </p>
+
+          <ul className="mt-8 space-y-3.5">
+            {FEATURES.map((f) => (
+              <li key={f.label} className="flex items-center gap-3 text-sm text-white/90">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/10 backdrop-blur-sm">
+                  <f.icon className="size-4" />
+                </span>
+                {f.label}
+              </li>
+            ))}
+          </ul>
+
+          <div
+            className="animate-float-card mt-10 flex w-fit items-center gap-3 rounded-xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-md"
+            aria-hidden
+          >
+            <span className="flex size-9 items-center justify-center rounded-lg bg-white/15 text-white">
+              <IndianRupee className="size-4.5" />
+            </span>
+            <div>
+              <p className="text-xs text-white/60">Today&apos;s sales</p>
+              <p className="text-sm font-semibold text-white">Up and running the moment you sign in</p>
+            </div>
           </div>
         </div>
 
-        {error && (
-          <div className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-danger">
-            <AlertCircle className="mt-0.5 size-4 shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
+        <p className="relative text-xs text-white/50">Multi-vendor restaurant billing platform</p>
+      </div>
 
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground" htmlFor="email">
-            Email
-          </label>
-          <div className="relative">
-            <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              id="email"
-              type="email"
-              required
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="pl-9"
-              placeholder="you@restaurant.com"
-            />
-          </div>
-        </div>
+      {/* Right: sign-in form */}
+      <div className="relative flex flex-1 items-center justify-center overflow-hidden p-6">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-32 left-1/2 h-96 w-[36rem] -translate-x-1/2 rounded-full bg-brand-300/30 blur-3xl lg:hidden"
+        />
 
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground" htmlFor="password">
-            Password
-          </label>
-          <div className="relative">
-            <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              id="password"
-              type="password"
-              required
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="pl-9"
-              placeholder="••••••••"
-            />
+        <form
+          onSubmit={handleSubmit}
+          className="animate-fade-in-up relative w-full max-w-sm space-y-5 rounded-xl border border-border bg-surface-card p-8 shadow-card"
+        >
+          <div className="flex flex-col items-center gap-3 text-center">
+            <span className="flex size-11 items-center justify-center rounded-xl bg-brand-600 text-white shadow-pop lg:hidden">
+              <ChefHat className="size-6" />
+            </span>
+            <div>
+              <h1 className="text-xl font-bold text-foreground">Welcome back</h1>
+              <p className="text-sm text-muted-foreground">Sign in to manage your restaurant</p>
+            </div>
           </div>
-        </div>
 
-        <Button type="submit" size="lg" loading={submitting} className="w-full">
-          {!submitting && <LogIn className="size-4" />}
-          {submitting ? "Signing in..." : "Sign in"}
-        </Button>
-      </form>
+          {error && (
+            <div className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-danger">
+              <AlertCircle className="mt-0.5 size-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-foreground" htmlFor="email">
+              Email
+            </label>
+            <div className="relative">
+              <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="email"
+                type="email"
+                required
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="pl-9"
+                placeholder="you@restaurant.com"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-foreground" htmlFor="password">
+              Password
+            </label>
+            <div className="relative">
+              <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="password"
+                type="password"
+                required
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="pl-9"
+                placeholder="••••••••"
+              />
+            </div>
+          </div>
+
+          <Button type="submit" size="lg" loading={submitting} className="w-full">
+            {!submitting && <LogIn className="size-4" />}
+            {submitting ? "Signing in..." : "Sign in"}
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }

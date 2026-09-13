@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Eye, Loader2, Receipt } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
@@ -9,6 +9,8 @@ import { listBills, Bill } from "@/services/billService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Pagination from "@/components/ui/Pagination";
+import SearchInput from "@/components/ui/SearchInput";
+import Select from "@/components/ui/Select";
 
 const PAYMENT_STYLES: Record<Bill["paymentStatus"], string> = {
   unpaid: "bg-red-50 text-red-700",
@@ -17,12 +19,23 @@ const PAYMENT_STYLES: Record<Bill["paymentStatus"], string> = {
   refunded: "bg-black/5 text-muted-foreground",
 };
 
+const SORT_OPTIONS = [
+  { value: "newest", label: "Newest first" },
+  { value: "oldest", label: "Oldest first" },
+  { value: "total-desc", label: "Total: high to low" },
+  { value: "total-asc", label: "Total: low to high" },
+] as const;
+type SortOption = (typeof SORT_OPTIONS)[number]["value"];
+
 const PAGE_SIZE = 10;
 
 export default function BillsPage() {
   const [bills, setBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<Bill["paymentStatus"] | "all">("all");
+  const [sort, setSort] = useState<SortOption>("newest");
 
   useEffect(() => {
     listBills()
@@ -30,9 +43,43 @@ export default function BillsPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const pageCount = Math.max(1, Math.ceil(bills.length / PAGE_SIZE));
+  function updateAndResetPage<T>(setter: (v: T) => void, value: T) {
+    setter(value);
+    setPage(1);
+  }
+
+  const filteredBills = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    const result = bills.filter((b) => {
+      if (statusFilter !== "all" && b.paymentStatus !== statusFilter) return false;
+      if (
+        query &&
+        !b.billNumber.toLowerCase().includes(query) &&
+        !b.order.orderNumber.toLowerCase().includes(query)
+      ) {
+        return false;
+      }
+      return true;
+    });
+
+    result.sort((a, b) => {
+      switch (sort) {
+        case "oldest":
+          return new Date(a.generatedAt).getTime() - new Date(b.generatedAt).getTime();
+        case "total-desc":
+          return Number(b.totalAmount) - Number(a.totalAmount);
+        case "total-asc":
+          return Number(a.totalAmount) - Number(b.totalAmount);
+        default:
+          return new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime();
+      }
+    });
+    return result;
+  }, [bills, search, statusFilter, sort]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredBills.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount);
-  const visibleBills = bills.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const visibleBills = filteredBills.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   return (
     <AppShell title="Bills" nav={<VendorNav />}>
@@ -43,6 +90,32 @@ export default function BillsPage() {
             Bills
           </CardTitle>
         </CardHeader>
+        <CardContent className="flex flex-col gap-3 border-b border-border sm:flex-row sm:flex-wrap sm:items-center">
+          <SearchInput
+            value={search}
+            onChange={(e) => updateAndResetPage(setSearch, e.target.value)}
+            placeholder="Search bill # or order #..."
+            className="sm:max-w-xs sm:flex-1"
+          />
+          <Select
+            value={statusFilter}
+            onChange={(e) => updateAndResetPage(setStatusFilter, e.target.value as Bill["paymentStatus"] | "all")}
+            className="sm:w-auto"
+          >
+            <option value="all">All payment statuses</option>
+            <option value="unpaid">Unpaid</option>
+            <option value="partial">Partial</option>
+            <option value="paid">Paid</option>
+            <option value="refunded">Refunded</option>
+          </Select>
+          <Select value={sort} onChange={(e) => setSort(e.target.value as SortOption)} className="sm:w-auto">
+            {SORT_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </Select>
+        </CardContent>
         <CardContent className="p-0">
           {loading ? (
             <div className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
@@ -51,6 +124,8 @@ export default function BillsPage() {
             </div>
           ) : bills.length === 0 ? (
             <p className="p-6 text-sm text-muted-foreground">No bills yet.</p>
+          ) : filteredBills.length === 0 ? (
+            <p className="p-6 text-sm text-muted-foreground">No bills match your search/filters.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">

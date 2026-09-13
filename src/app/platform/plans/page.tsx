@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, FormEvent } from "react";
+import { useEffect, useMemo, useState, FormEvent } from "react";
 import { toast } from "react-toastify";
 import { CreditCard, Loader2, Plus, Trash2 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
@@ -13,6 +13,14 @@ import Select from "@/components/ui/Select";
 import { Badge } from "@/components/ui/Badge";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import Pagination from "@/components/ui/Pagination";
+import SearchInput from "@/components/ui/SearchInput";
+
+const SORT_OPTIONS = [
+  { value: "name-asc", label: "Name: A to Z" },
+  { value: "price-asc", label: "Price: low to high" },
+  { value: "price-desc", label: "Price: high to low" },
+] as const;
+type SortOption = (typeof SORT_OPTIONS)[number]["value"];
 
 const PAGE_SIZE = 10;
 
@@ -34,6 +42,9 @@ export default function PlansPage() {
   const [deleteTarget, setDeleteTarget] = useState<SubscriptionPlan | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [sort, setSort] = useState<SortOption>("name-asc");
 
   function refresh() {
     return listPlans()
@@ -110,9 +121,29 @@ export default function PlansPage() {
     }
   }
 
-  const pageCount = Math.max(1, Math.ceil(plans.length / PAGE_SIZE));
+  function updateAndResetPage<T>(setter: (v: T) => void, value: T) {
+    setter(value);
+    setPage(1);
+  }
+
+  const filteredPlans = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    const result = plans.filter((p) => {
+      if (statusFilter !== "all" && (statusFilter === "active") !== p.isActive) return false;
+      if (query && !p.name.toLowerCase().includes(query)) return false;
+      return true;
+    });
+    result.sort((a, b) => {
+      if (sort === "price-asc") return Number(a.priceMonthly) - Number(b.priceMonthly);
+      if (sort === "price-desc") return Number(b.priceMonthly) - Number(a.priceMonthly);
+      return a.name.localeCompare(b.name);
+    });
+    return result;
+  }, [plans, search, statusFilter, sort]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredPlans.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount);
-  const visiblePlans = plans.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const visiblePlans = filteredPlans.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   return (
     <AppShell title="Subscription plans" nav={<PlatformNav />}>
@@ -124,6 +155,30 @@ export default function PlansPage() {
               Plans
             </CardTitle>
           </CardHeader>
+          <CardContent className="flex flex-col gap-3 border-b border-border sm:flex-row sm:flex-wrap sm:items-center">
+            <SearchInput
+              value={search}
+              onChange={(e) => updateAndResetPage(setSearch, e.target.value)}
+              placeholder="Search plan name..."
+              className="sm:max-w-xs sm:flex-1"
+            />
+            <Select
+              value={statusFilter}
+              onChange={(e) => updateAndResetPage(setStatusFilter, e.target.value as "all" | "active" | "inactive")}
+              className="sm:w-auto"
+            >
+              <option value="all">All statuses</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </Select>
+            <Select value={sort} onChange={(e) => setSort(e.target.value as SortOption)} className="sm:w-auto">
+              {SORT_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </Select>
+          </CardContent>
           <CardContent className="p-0">
             {loading ? (
               <div className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
@@ -132,6 +187,8 @@ export default function PlansPage() {
               </div>
             ) : plans.length === 0 ? (
               <p className="p-6 text-sm text-muted-foreground">No plans yet — create one to get started.</p>
+            ) : filteredPlans.length === 0 ? (
+              <p className="p-6 text-sm text-muted-foreground">No plans match your search/filters.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">

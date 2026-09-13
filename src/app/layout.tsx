@@ -19,7 +19,7 @@ const fontMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Restaurant Billing",
+  title: "RestroDesk",
   description: "Multi-vendor restaurant billing platform",
 };
 

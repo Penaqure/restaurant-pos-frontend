@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, FormEvent } from "react";
+import { useEffect, useMemo, useState, FormEvent } from "react";
 import { toast } from "react-toastify";
 import { Loader2, Pencil, Percent, Plus, Trash2 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
@@ -13,6 +13,13 @@ import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import Pagination from "@/components/ui/Pagination";
+import SearchInput from "@/components/ui/SearchInput";
+
+const SORT_OPTIONS = [
+  { value: "code-asc", label: "Code: A to Z" },
+  { value: "usage-desc", label: "Most used" },
+] as const;
+type SortOption = (typeof SORT_OPTIONS)[number]["value"];
 
 const PAGE_SIZE = 10;
 
@@ -33,6 +40,9 @@ export default function DiscountsPage() {
   const [deleting, setDeleting] = useState(false);
   const [forbidden, setForbidden] = useState(false);
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState<"all" | "percentage" | "flat">("all");
+  const [sort, setSort] = useState<SortOption>("code-asc");
 
   function refresh() {
     return listDiscounts()
@@ -110,6 +120,17 @@ export default function DiscountsPage() {
     }
   }
 
+  const filteredDiscounts = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    const result = discounts.filter((d) => {
+      if (typeFilter !== "all" && d.type !== typeFilter) return false;
+      if (query && !d.code.toLowerCase().includes(query)) return false;
+      return true;
+    });
+    result.sort((a, b) => (sort === "usage-desc" ? b.usageCount - a.usageCount : a.code.localeCompare(b.code)));
+    return result;
+  }, [discounts, search, typeFilter, sort]);
+
   if (forbidden) {
     return (
       <AppShell title="Discounts" nav={<VendorNav />}>
@@ -120,9 +141,14 @@ export default function DiscountsPage() {
     );
   }
 
-  const pageCount = Math.max(1, Math.ceil(discounts.length / PAGE_SIZE));
+  function updateAndResetPage<T>(setter: (v: T) => void, value: T) {
+    setter(value);
+    setPage(1);
+  }
+
+  const pageCount = Math.max(1, Math.ceil(filteredDiscounts.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount);
-  const visibleDiscounts = discounts.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const visibleDiscounts = filteredDiscounts.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   return (
     <AppShell title="Discounts" nav={<VendorNav />}>
@@ -134,6 +160,30 @@ export default function DiscountsPage() {
               Discount codes
             </CardTitle>
           </CardHeader>
+          <CardContent className="flex flex-col gap-3 border-b border-border sm:flex-row sm:flex-wrap sm:items-center">
+            <SearchInput
+              value={search}
+              onChange={(e) => updateAndResetPage(setSearch, e.target.value)}
+              placeholder="Search code..."
+              className="sm:max-w-xs sm:flex-1"
+            />
+            <Select
+              value={typeFilter}
+              onChange={(e) => updateAndResetPage(setTypeFilter, e.target.value as "all" | "percentage" | "flat")}
+              className="sm:w-auto"
+            >
+              <option value="all">All types</option>
+              <option value="percentage">Percentage off</option>
+              <option value="flat">Flat amount off</option>
+            </Select>
+            <Select value={sort} onChange={(e) => setSort(e.target.value as SortOption)} className="sm:w-auto">
+              {SORT_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </Select>
+          </CardContent>
           <CardContent className="p-0">
             {loading ? (
               <div className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
@@ -142,6 +192,8 @@ export default function DiscountsPage() {
               </div>
             ) : discounts.length === 0 ? (
               <p className="p-6 text-sm text-muted-foreground">No discount codes yet.</p>
+            ) : filteredDiscounts.length === 0 ? (
+              <p className="p-6 text-sm text-muted-foreground">No discounts match your search/filters.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">

@@ -3,18 +3,27 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Eye, ImageOff, Loader2, Plus, Search } from "lucide-react";
+import { Eye, ImageOff, Loader2, Plus } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import VendorNav from "@/components/layout/VendorNav";
 import { useAuth } from "@/context/AuthContext";
 import { listCategories, listItems, MenuCategory, MenuItem } from "@/services/menuService";
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
+import SearchInput from "@/components/ui/SearchInput";
 import { Badge } from "@/components/ui/Badge";
 
 const API_ORIGIN = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/api\/?$/, "");
 
 type VegFilter = "all" | "veg" | "non-veg";
+
+const SORT_OPTIONS = [
+  { value: "name-asc", label: "Name: A to Z" },
+  { value: "name-desc", label: "Name: Z to A" },
+  { value: "price-asc", label: "Price: low to high" },
+  { value: "price-desc", label: "Price: high to low" },
+] as const;
+type SortOption = (typeof SORT_OPTIONS)[number]["value"];
 
 export default function MenuItemsPage() {
   const { user } = useAuth();
@@ -28,6 +37,7 @@ export default function MenuItemsPage() {
   const [activeCategory, setActiveCategory] = useState<string | "all">("all");
   const [vegFilter, setVegFilter] = useState<VegFilter>("all");
   const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<SortOption>("name-asc");
 
   useEffect(() => {
     Promise.all([listItems(), listCategories()])
@@ -40,26 +50,45 @@ export default function MenuItemsPage() {
 
   const visibleItems = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return items.filter((item) => {
+    const result = items.filter((item) => {
       if (activeCategory !== "all" && item.categoryId !== activeCategory) return false;
       if (vegFilter === "veg" && !item.isVeg) return false;
       if (vegFilter === "non-veg" && item.isVeg) return false;
       if (query && !item.name.toLowerCase().includes(query)) return false;
       return true;
     });
-  }, [items, activeCategory, vegFilter, search]);
+    result.sort((a, b) => {
+      switch (sort) {
+        case "name-desc":
+          return b.name.localeCompare(a.name);
+        case "price-asc":
+          return Number(a.basePrice) - Number(b.basePrice);
+        case "price-desc":
+          return Number(b.basePrice) - Number(a.basePrice);
+        default:
+          return a.name.localeCompare(b.name);
+      }
+    });
+    return result;
+  }, [items, activeCategory, vegFilter, search, sort]);
 
   return (
     <AppShell title="Menu items" nav={<VendorNav />}>
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full sm:max-w-xs">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <SearchInput
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search items..."
-            className="pl-9"
+            className="sm:max-w-xs"
           />
+          <Select value={sort} onChange={(e) => setSort(e.target.value as SortOption)} className="sm:w-auto">
+            {SORT_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </Select>
         </div>
         {canManage && (
           <Link href="/dashboard/menu/items/new" className="shrink-0">

@@ -12,6 +12,8 @@ import { listOrders, updateOrderStatus, Order, OrderStatus } from "@/services/or
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
+import SearchInput from "@/components/ui/SearchInput";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import TableQrModal from "@/components/tables/TableQrModal";
 import MoveOrderModal from "@/components/tables/MoveOrderModal";
@@ -79,6 +81,8 @@ export default function TablesPage() {
   const [cancelTarget, setCancelTarget] = useState<Order | null>(null);
   const [cancelingOrder, setCancelingOrder] = useState(false);
   const [moveTarget, setMoveTarget] = useState<Order | null>(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<Status | "all">("all");
 
   function refresh() {
     return Promise.all([listTables(), listOrders()])
@@ -108,7 +112,18 @@ export default function TablesPage() {
     return counts;
   }, [tables]);
 
-  const locationGroups = useMemo(() => groupByLocation(tables), [tables]);
+  const filteredTables = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return tables.filter((t) => {
+      if (statusFilter !== "all" && t.status !== statusFilter) return false;
+      if (query && !t.name.toLowerCase().includes(query) && !(t.location || "").toLowerCase().includes(query)) {
+        return false;
+      }
+      return true;
+    });
+  }, [tables, search, statusFilter]);
+
+  const locationGroups = useMemo(() => groupByLocation(filteredTables), [filteredTables]);
 
   function startEdit(t: RestaurantTable) {
     setEditingId(t.id);
@@ -211,10 +226,30 @@ export default function TablesPage() {
             </div>
           )}
 
+          {!loading && tables.length > 0 && (
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+              <SearchInput
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search table or location..."
+                className="sm:max-w-xs sm:flex-1"
+              />
+              <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as Status | "all")} className="sm:w-auto">
+                <option value="all">All statuses</option>
+                <option value="available">Available</option>
+                <option value="occupied">Occupied</option>
+                <option value="reserved">Reserved</option>
+                <option value="cleaning">Cleaning</option>
+              </Select>
+            </div>
+          )}
+
           {loading ? (
             <p className="text-sm text-muted-foreground">Loading...</p>
           ) : tables.length === 0 ? (
             <p className="text-sm text-muted-foreground">No tables yet.</p>
+          ) : filteredTables.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No tables match your search/filters.</p>
           ) : (
             <div className="space-y-6">
               {locationGroups.map((group) => (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, FormEvent } from "react";
+import { useEffect, useMemo, useState, FormEvent } from "react";
 import { toast } from "react-toastify";
 import { Building2, Loader2, MapPin, Pencil, Plus, Power, Trash2 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
@@ -10,10 +10,18 @@ import { listBranches, createBranch, updateBranch, deleteBranch, Branch } from "
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
 import { Badge } from "@/components/ui/Badge";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import UsageBar from "@/components/ui/UsageBar";
 import Pagination from "@/components/ui/Pagination";
+import SearchInput from "@/components/ui/SearchInput";
+
+const SORT_OPTIONS = [
+  { value: "name-asc", label: "Name: A to Z" },
+  { value: "name-desc", label: "Name: Z to A" },
+] as const;
+type SortOption = (typeof SORT_OPTIONS)[number]["value"];
 
 const PAGE_SIZE = 10;
 
@@ -30,6 +38,9 @@ export default function BranchesPage() {
   const [deleteTarget, setDeleteTarget] = useState<Branch | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [sort, setSort] = useState<SortOption>("name-asc");
 
   function refresh() {
     return listBranches()
@@ -117,6 +128,23 @@ export default function BranchesPage() {
     }
   }
 
+  const filteredBranches = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    const result = branches.filter((b) => {
+      if (statusFilter !== "all" && (statusFilter === "active") !== b.isActive) return false;
+      if (
+        query &&
+        !b.name.toLowerCase().includes(query) &&
+        !(b.city || "").toLowerCase().includes(query)
+      ) {
+        return false;
+      }
+      return true;
+    });
+    result.sort((a, b) => (sort === "name-desc" ? b.name.localeCompare(a.name) : a.name.localeCompare(b.name)));
+    return result;
+  }, [branches, search, statusFilter, sort]);
+
   if (user && user.role !== "owner") {
     return (
       <AppShell title="Branches" nav={<VendorNav />}>
@@ -125,10 +153,15 @@ export default function BranchesPage() {
     );
   }
 
+  function updateAndResetPage<T>(setter: (v: T) => void, value: T) {
+    setter(value);
+    setPage(1);
+  }
+
   const planLimits = user?.vendor?.planLimits;
-  const pageCount = Math.max(1, Math.ceil(branches.length / PAGE_SIZE));
+  const pageCount = Math.max(1, Math.ceil(filteredBranches.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount);
-  const visibleBranches = branches.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const visibleBranches = filteredBranches.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   return (
     <AppShell title="Branches" nav={<VendorNav />}>
@@ -150,6 +183,30 @@ export default function BranchesPage() {
               </CardTitle>
               <Badge tone="brand">{branches.length} branch{branches.length === 1 ? "" : "es"}</Badge>
             </CardHeader>
+            <CardContent className="flex flex-col gap-3 border-b border-border sm:flex-row sm:flex-wrap sm:items-center">
+              <SearchInput
+                value={search}
+                onChange={(e) => updateAndResetPage(setSearch, e.target.value)}
+                placeholder="Search name or city..."
+                className="sm:max-w-xs sm:flex-1"
+              />
+              <Select
+                value={statusFilter}
+                onChange={(e) => updateAndResetPage(setStatusFilter, e.target.value as "all" | "active" | "inactive")}
+                className="sm:w-auto"
+              >
+                <option value="all">All statuses</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </Select>
+              <Select value={sort} onChange={(e) => setSort(e.target.value as SortOption)} className="sm:w-auto">
+                {SORT_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </Select>
+            </CardContent>
             <CardContent className="p-0">
               {loading ? (
                 <div className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
@@ -158,6 +215,8 @@ export default function BranchesPage() {
                 </div>
               ) : branches.length === 0 ? (
                 <p className="p-6 text-sm text-muted-foreground">No branches yet — add one to get started.</p>
+              ) : filteredBranches.length === 0 ? (
+                <p className="p-6 text-sm text-muted-foreground">No branches match your search/filters.</p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">

@@ -57,9 +57,9 @@ export default function AppShell({
           </span>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-bold text-foreground">
-              {user?.vendor?.name || "Billing OS"}
+              {user?.vendor?.name || "RestroDesk"}
             </p>
-            <p className="text-xs text-muted-foreground">Restaurant billing</p>
+            <p className="text-xs text-muted-foreground">RestroDesk</p>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
