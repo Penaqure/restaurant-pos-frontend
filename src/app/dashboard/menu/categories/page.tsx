@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, FormEvent } from "react";
 import { toast } from "react-toastify";
-import { LayoutGrid, Loader2, Pencil, Plus, Trash2, UtensilsCrossed } from "lucide-react";
+import { LayoutGrid, Loader2, Pencil, Plus, Trash2, Upload, UtensilsCrossed } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import VendorNav from "@/components/layout/VendorNav";
 import { useAuth } from "@/context/AuthContext";
@@ -14,6 +14,7 @@ import Select from "@/components/ui/Select";
 import { Badge } from "@/components/ui/Badge";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import SearchInput from "@/components/ui/SearchInput";
+import ImportMenuModal from "@/components/menu/ImportMenuModal";
 
 const SORT_OPTIONS = [
   { value: "name-asc", label: "Name: A to Z" },
@@ -57,6 +58,7 @@ export default function CategoriesPage() {
   const [deleting, setDeleting] = useState(false);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<SortOption>("name-asc");
+  const [showImport, setShowImport] = useState(false);
 
   function refresh() {
     return Promise.all([listCategories(), listItems()])
@@ -147,7 +149,15 @@ export default function CategoriesPage() {
               <LayoutGrid className="size-4 text-muted-foreground" />
               Categories
             </CardTitle>
-            <Badge tone="brand">{categories.length}</Badge>
+            <div className="flex items-center gap-2">
+              <Badge tone="brand">{categories.length}</Badge>
+              {canManage && (
+                <Button type="button" variant="secondary" size="sm" onClick={() => setShowImport(true)}>
+                  <Upload className="size-3.5" />
+                  Import
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="flex flex-col gap-3 border-b border-border sm:flex-row sm:flex-wrap sm:items-center">
             <SearchInput
@@ -263,6 +273,10 @@ export default function CategoriesPage() {
           onConfirm={handleConfirmDelete}
           onCancel={() => setDeleteTarget(null)}
         />
+      )}
+
+      {showImport && (
+        <ImportMenuModal kind="categories" onClose={() => setShowImport(false)} onImported={refresh} />
       )}
     </AppShell>
   );

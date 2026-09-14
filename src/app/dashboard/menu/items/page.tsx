@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Eye, ImageOff, Loader2, Plus } from "lucide-react";
+import { Eye, ImageOff, Loader2, Plus, Upload } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import VendorNav from "@/components/layout/VendorNav";
 import { useAuth } from "@/context/AuthContext";
@@ -12,6 +12,7 @@ import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
 import SearchInput from "@/components/ui/SearchInput";
 import { Badge } from "@/components/ui/Badge";
+import ImportMenuModal from "@/components/menu/ImportMenuModal";
 
 const API_ORIGIN = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/api\/?$/, "");
 
@@ -38,14 +39,19 @@ export default function MenuItemsPage() {
   const [vegFilter, setVegFilter] = useState<VegFilter>("all");
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<SortOption>("name-asc");
+  const [showImport, setShowImport] = useState(false);
 
-  useEffect(() => {
-    Promise.all([listItems(), listCategories()])
+  function refresh() {
+    return Promise.all([listItems(), listCategories()])
       .then(([i, c]) => {
         setItems(i);
         setCategories(c);
       })
       .finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    refresh();
   }, []);
 
   const visibleItems = useMemo(() => {
@@ -91,12 +97,18 @@ export default function MenuItemsPage() {
           </Select>
         </div>
         {canManage && (
-          <Link href="/dashboard/menu/items/new" className="shrink-0">
-            <Button className="w-full sm:w-auto">
-              <Plus className="size-4" />
-              New item
+          <div className="flex shrink-0 gap-2">
+            <Button type="button" variant="secondary" className="flex-1 sm:flex-none" onClick={() => setShowImport(true)}>
+              <Upload className="size-4" />
+              Import
             </Button>
-          </Link>
+            <Link href="/dashboard/menu/items/new" className="flex-1 sm:flex-none">
+              <Button className="w-full">
+                <Plus className="size-4" />
+                New item
+              </Button>
+            </Link>
+          </div>
         )}
       </div>
 
@@ -214,6 +226,8 @@ export default function MenuItemsPage() {
           ))}
         </div>
       )}
+
+      {showImport && <ImportMenuModal kind="items" onClose={() => setShowImport(false)} onImported={refresh} />}
     </AppShell>
   );
 }

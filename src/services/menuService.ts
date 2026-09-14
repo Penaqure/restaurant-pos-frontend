@@ -52,6 +52,40 @@ export async function deleteCategory(id: string) {
   await axiosInstance.delete(`/menu/categories/${id}`);
 }
 
+export type ImportResult = {
+  totalRows: number;
+  created: number;
+  updated: number;
+  categoriesCreated?: number;
+  errors: { row: number; message: string }[];
+};
+
+export async function importCategories(file: File) {
+  const form = new FormData();
+  form.append("file", file);
+  const { data } = await axiosInstance.post<ImportResult>("/menu/categories/import", form, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data;
+}
+
+export async function importItems(file: File) {
+  const form = new FormData();
+  form.append("file", file);
+  const { data } = await axiosInstance.post<ImportResult>("/menu/items/import", form, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data;
+}
+
+export async function downloadImportSample(kind: "categories" | "items", format: "csv" | "json") {
+  const { data } = await axiosInstance.get(`/menu/${kind}/import/sample`, {
+    params: { format },
+    responseType: "blob",
+  });
+  return data as Blob;
+}
+
 // -- Tax rates --
 export async function listTaxRates() {
   const { data } = await axiosInstance.get<TaxRate[]>("/menu/tax-rates");

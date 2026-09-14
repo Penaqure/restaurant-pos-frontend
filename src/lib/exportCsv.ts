@@ -80,6 +80,10 @@ export function downloadCsv(filename: string, content: string) {
   // A UTF-8 BOM makes Excel (not just Sheets) detect the encoding correctly
   // instead of mangling the ₹ symbol and other non-ASCII characters.
   const blob = new Blob(["﻿" + content], { type: "text/csv;charset=utf-8;" });
+  downloadBlob(filename, blob);
+}
+
+export function downloadBlob(filename: string, blob: Blob) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
