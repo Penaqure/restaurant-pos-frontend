@@ -81,3 +81,12 @@ export async function addOrderItems(id: string, items: OrderLineInput[]) {
   const { data } = await axiosInstance.post<Order>(`/orders/${id}/items`, { items });
   return data;
 }
+
+// The KOT route requires the Authorization header, so a plain <a href>
+// won't work -- fetch it as a blob through axios (which attaches the
+// token) and open that instead, same approach as openBillPdf.
+export async function openOrderKotPdf(id: string) {
+  const { data } = await axiosInstance.get(`/orders/${id}/kot`, { responseType: "blob" });
+  const blobUrl = URL.createObjectURL(data as Blob);
+  window.open(blobUrl, "_blank");
+}

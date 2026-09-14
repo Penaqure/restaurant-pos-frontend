@@ -2,10 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import { ChefHat, Clock, Flame, Loader2 } from "lucide-react";
+import { ChefHat, Clock, Flame, Loader2, Printer } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import VendorNav from "@/components/layout/VendorNav";
-import { listOrders, updateOrderStatus, Order, OrderStatus } from "@/services/orderService";
+import { listOrders, updateOrderStatus, openOrderKotPdf, Order, OrderStatus } from "@/services/orderService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 
@@ -52,6 +52,7 @@ export default function KitchenPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [printingId, setPrintingId] = useState<string | null>(null);
 
   function refresh() {
     return listOrders()
@@ -99,6 +100,17 @@ export default function KitchenPage() {
       toast.error("Could not update order status");
     } finally {
       setUpdatingId(null);
+    }
+  }
+
+  async function printKot(order: Order) {
+    setPrintingId(order.id);
+    try {
+      await openOrderKotPdf(order.id);
+    } catch {
+      toast.error("Could not open kitchen ticket");
+    } finally {
+      setPrintingId(null);
     }
   }
 
@@ -168,16 +180,29 @@ export default function KitchenPage() {
                         ))}
                       </ul>
 
-                      {next && (
+                      <div className="mt-3 flex gap-2">
                         <Button
+                          variant="secondary"
                           size="sm"
-                          className="mt-3 w-full"
-                          loading={updatingId === order.id}
-                          onClick={() => advance(order)}
+                          className={next ? "" : "flex-1"}
+                          loading={printingId === order.id}
+                          onClick={() => printKot(order)}
+                          title="Print kitchen ticket"
                         >
-                          {updatingId === order.id ? "Updating..." : `Mark ${next}`}
+                          {printingId !== order.id && <Printer className="size-3.5" />}
+                          {!next && "Print KOT"}
                         </Button>
-                      )}
+                        {next && (
+                          <Button
+                            size="sm"
+                            className="flex-1"
+                            loading={updatingId === order.id}
+                            onClick={() => advance(order)}
+                          >
+                            {updatingId === order.id ? "Updating..." : `Mark ${next}`}
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   );
                 })}

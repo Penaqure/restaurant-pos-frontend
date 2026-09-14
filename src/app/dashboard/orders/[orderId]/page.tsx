@@ -3,11 +3,11 @@
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-import { ArrowRightLeft, Loader2, Plus, Receipt, X } from "lucide-react";
+import { ArrowRightLeft, Loader2, Plus, Printer, Receipt, X } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import VendorNav from "@/components/layout/VendorNav";
 import { useAuth } from "@/context/AuthContext";
-import { getOrder, updateOrderStatus, transferOrderTable, Order, OrderStatus } from "@/services/orderService";
+import { getOrder, updateOrderStatus, transferOrderTable, openOrderKotPdf, Order, OrderStatus } from "@/services/orderService";
 import { generateBillFromOrder } from "@/services/billService";
 import { listTables, RestaurantTable } from "@/services/tableService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -42,6 +42,7 @@ export default function OrderDetailPage(props: PageProps<"/dashboard/orders/[ord
   const [targetTableId, setTargetTableId] = useState("");
   const [transferring, setTransferring] = useState(false);
   const [addingItems, setAddingItems] = useState(false);
+  const [printingKot, setPrintingKot] = useState(false);
 
   function refresh() {
     return getOrder(orderId)
@@ -98,6 +99,18 @@ export default function OrderDetailPage(props: PageProps<"/dashboard/orders/[ord
       toast.error(message || "Could not move order");
     } finally {
       setTransferring(false);
+    }
+  }
+
+  async function printKot() {
+    if (!order) return;
+    setPrintingKot(true);
+    try {
+      await openOrderKotPdf(order.id);
+    } catch {
+      toast.error("Could not open kitchen ticket");
+    } finally {
+      setPrintingKot(false);
     }
   }
 
@@ -199,12 +212,18 @@ export default function OrderDetailPage(props: PageProps<"/dashboard/orders/[ord
         <Card>
           <CardHeader>
             <CardTitle>Items</CardTitle>
-            {!isTerminal && (
-              <Button variant="secondary" size="sm" onClick={() => setAddingItems(true)}>
-                <Plus className="size-3.5" />
-                Add items
+            <div className="flex gap-2">
+              <Button variant="secondary" size="sm" loading={printingKot} onClick={printKot}>
+                {!printingKot && <Printer className="size-3.5" />}
+                Print KOT
               </Button>
-            )}
+              {!isTerminal && (
+                <Button variant="secondary" size="sm" onClick={() => setAddingItems(true)}>
+                  <Plus className="size-3.5" />
+                  Add items
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             <ul className="divide-y divide-border">
