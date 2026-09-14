@@ -5,6 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { BranchProvider } from "@/context/BranchContext";
+import { NotificationProvider } from "@/context/NotificationContext";
 
 const fontSans = Plus_Jakarta_Sans({
   variable: "--font-sans",
@@ -32,8 +33,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col bg-surface text-foreground font-sans">
         <AuthProvider>
           <BranchProvider>
-            {children}
-            <ToastContainer position="top-right" autoClose={3000} />
+            <NotificationProvider>
+              {children}
+              <ToastContainer position="top-right" autoClose={3000} />
+            </NotificationProvider>
           </BranchProvider>
         </AuthProvider>
       </body>

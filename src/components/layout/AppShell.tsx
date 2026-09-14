@@ -6,6 +6,7 @@ import { ChefHat, ChevronDown, LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useBranch } from "@/context/BranchContext";
 import { buildBrandRamp } from "@/lib/brandColor";
+import NotificationBell from "@/components/layout/NotificationBell";
 
 const API_ORIGIN = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/api\/?$/, "");
 
@@ -140,6 +141,8 @@ export default function AppShell({
               <ChevronDown className="pointer-events-none absolute right-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             </div>
           )}
+
+          {user?.vendorId && <NotificationBell />}
         </header>
 
         <main className="min-w-0 flex-1 bg-surface p-4 lg:p-6">{children}</main>

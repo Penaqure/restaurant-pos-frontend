@@ -7,8 +7,10 @@ import { Ban, ClipboardList, Eye, Loader2, QrCode } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import VendorNav from "@/components/layout/VendorNav";
 import { listOrders, updateOrderStatus, Order, OrderStatus, OrderType } from "@/services/orderService";
+import { isWithinDateRange } from "@/lib/dateRange";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
 import Pagination from "@/components/ui/Pagination";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import SearchInput from "@/components/ui/SearchInput";
@@ -44,6 +46,8 @@ export default function OrdersPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
   const [typeFilter, setTypeFilter] = useState<OrderType | "all">("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [sort, setSort] = useState<SortOption>("newest");
   const [cancelTarget, setCancelTarget] = useState<Order | null>(null);
   const [cancelingOrder, setCancelingOrder] = useState(false);
@@ -68,6 +72,7 @@ export default function OrdersPage() {
     const result = orders.filter((o) => {
       if (statusFilter !== "all" && o.status !== statusFilter) return false;
       if (typeFilter !== "all" && o.orderType !== typeFilter) return false;
+      if (!isWithinDateRange(o.placedAt, dateFrom, dateTo)) return false;
       if (
         query &&
         !o.orderNumber.toLowerCase().includes(query) &&
@@ -92,7 +97,7 @@ export default function OrdersPage() {
       }
     });
     return result;
-  }, [orders, search, statusFilter, typeFilter, sort]);
+  }, [orders, search, statusFilter, typeFilter, dateFrom, dateTo, sort]);
 
   async function handleConfirmCancelOrder() {
     if (!cancelTarget) return;
@@ -151,6 +156,25 @@ export default function OrdersPage() {
             <option value="takeaway">Takeaway</option>
             <option value="delivery">Delivery</option>
           </Select>
+          <div className="flex items-center gap-1.5">
+            <Input
+              type="date"
+              value={dateFrom}
+              max={dateTo || undefined}
+              onChange={(e) => updateAndResetPage(setDateFrom, e.target.value)}
+              className="sm:w-auto"
+              aria-label="From date"
+            />
+            <span className="text-xs text-muted-foreground">to</span>
+            <Input
+              type="date"
+              value={dateTo}
+              min={dateFrom || undefined}
+              onChange={(e) => updateAndResetPage(setDateTo, e.target.value)}
+              className="sm:w-auto"
+              aria-label="To date"
+            />
+          </div>
           <Select value={sort} onChange={(e) => setSort(e.target.value as SortOption)} className="sm:w-auto">
             {SORT_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>

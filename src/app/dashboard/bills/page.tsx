@@ -6,8 +6,10 @@ import { Eye, Loader2, Receipt } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import VendorNav from "@/components/layout/VendorNav";
 import { listBills, Bill } from "@/services/billService";
+import { isWithinDateRange } from "@/lib/dateRange";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
 import Pagination from "@/components/ui/Pagination";
 import SearchInput from "@/components/ui/SearchInput";
 import Select from "@/components/ui/Select";
@@ -35,6 +37,8 @@ export default function BillsPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<Bill["paymentStatus"] | "all">("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [sort, setSort] = useState<SortOption>("newest");
 
   useEffect(() => {
@@ -52,6 +56,7 @@ export default function BillsPage() {
     const query = search.trim().toLowerCase();
     const result = bills.filter((b) => {
       if (statusFilter !== "all" && b.paymentStatus !== statusFilter) return false;
+      if (!isWithinDateRange(b.generatedAt, dateFrom, dateTo)) return false;
       if (
         query &&
         !b.billNumber.toLowerCase().includes(query) &&
@@ -75,7 +80,7 @@ export default function BillsPage() {
       }
     });
     return result;
-  }, [bills, search, statusFilter, sort]);
+  }, [bills, search, statusFilter, dateFrom, dateTo, sort]);
 
   const pageCount = Math.max(1, Math.ceil(filteredBills.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount);
@@ -108,6 +113,25 @@ export default function BillsPage() {
             <option value="paid">Paid</option>
             <option value="refunded">Refunded</option>
           </Select>
+          <div className="flex items-center gap-1.5">
+            <Input
+              type="date"
+              value={dateFrom}
+              max={dateTo || undefined}
+              onChange={(e) => updateAndResetPage(setDateFrom, e.target.value)}
+              className="sm:w-auto"
+              aria-label="From date"
+            />
+            <span className="text-xs text-muted-foreground">to</span>
+            <Input
+              type="date"
+              value={dateTo}
+              min={dateFrom || undefined}
+              onChange={(e) => updateAndResetPage(setDateTo, e.target.value)}
+              className="sm:w-auto"
+              aria-label="To date"
+            />
+          </div>
           <Select value={sort} onChange={(e) => setSort(e.target.value as SortOption)} className="sm:w-auto">
             {SORT_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
