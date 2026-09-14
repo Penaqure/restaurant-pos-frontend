@@ -1,29 +1,45 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { toast } from "react-toastify";
-import { Loader2, Receipt, Save } from "lucide-react";
+import { Building2, Loader2, Receipt, Save, Store, Upload } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import VendorNav from "@/components/layout/VendorNav";
 import { useAuth } from "@/context/AuthContext";
-import { getBillingSettings, updateBillingSettings, BillingSettings } from "@/services/vendorSettingsService";
+import {
+  getBillingSettings,
+  updateBillingSettings,
+  BillingSettings,
+  getBrandingSettings,
+  updateBrandingSettings,
+  uploadBrandingLogo,
+  BrandingSettings,
+} from "@/services/vendorSettingsService";
 import { BILL_PDF_SIZES, BillPdfSize } from "@/services/billService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
 import Input from "@/components/ui/Input";
 
+const API_ORIGIN = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/api\/?$/, "");
+
 export default function SettingsPage() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [settings, setSettings] = useState<BillingSettings | null>(null);
+  const [branding, setBranding] = useState<BrandingSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingBranding, setSavingBranding] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [forbidden, setForbidden] = useState(false);
 
   useEffect(() => {
-    getBillingSettings()
-      .then((s) => {
-        setSettings(s);
+    Promise.all([getBillingSettings(), getBrandingSettings()])
+      .then(([billing, brand]) => {
+        setSettings(billing);
+        setBranding(brand);
         setForbidden(false);
       })
       .catch((err) => {
@@ -46,6 +62,38 @@ export default function SettingsPage() {
     }
   }
 
+  async function handleSaveBranding() {
+    if (!branding) return;
+    setSavingBranding(true);
+    try {
+      const updated = await updateBrandingSettings({ name: branding.name, brandColor: branding.brandColor });
+      setBranding(updated);
+      await refreshUser();
+      toast.success("Branding saved");
+    } catch {
+      toast.error("Could not save branding");
+    } finally {
+      setSavingBranding(false);
+    }
+  }
+
+  async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingLogo(true);
+    try {
+      const { logoUrl } = await uploadBrandingLogo(file);
+      setBranding((b) => (b ? { ...b, logoUrl } : b));
+      await refreshUser();
+      toast.success("Logo updated");
+    } catch {
+      toast.error("Could not upload logo");
+    } finally {
+      setUploadingLogo(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
   if (user && user.role !== "owner") {
     return (
       <AppShell title="Settings" nav={<VendorNav />}>
@@ -62,13 +110,92 @@ export default function SettingsPage() {
         <p className="text-sm text-muted-foreground">
           Your role doesn&apos;t have access to settings. Ask an owner if you need this.
         </p>
-      ) : loading || !settings ? (
+      ) : loading || !settings || !branding ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="size-4 animate-spin" />
           Loading...
         </div>
       ) : (
-        <Card className="max-w-xl">
+        <div className="grid items-start gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Store className="size-4 text-muted-foreground" />
+              Branding
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <p className="text-sm text-muted-foreground">
+              Your logo and brand color show up across the dashboard sidebar, printed bills, and the customer-facing
+              QR order page.
+            </p>
+
+            <div className="flex items-center gap-4">
+              <div className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-black/5 text-muted-foreground">
+                {branding.logoUrl ? (
+                  <Image
+                    src={`${API_ORIGIN}${branding.logoUrl}`}
+                    alt={branding.name}
+                    fill
+                    unoptimized
+                    className="object-cover"
+                  />
+                ) : (
+                  <Building2 className="size-6" />
+                )}
+              </div>
+              <div>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  loading={uploadingLogo}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {!uploadingLogo && <Upload className="size-3.5" />}
+                  {branding.logoUrl ? "Replace logo" : "Upload logo"}
+                </Button>
+                <input ref={fileInputRef} type="file" accept="image/*" hidden onChange={handleLogoChange} />
+                <p className="mt-1 text-xs text-muted-foreground">PNG/JPG/WEBP, up to 5MB.</p>
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Restaurant name</label>
+                <Input
+                  value={branding.name}
+                  onChange={(e) => setBranding({ ...branding, name: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Brand color</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={branding.brandColor}
+                    onChange={(e) => setBranding({ ...branding, brandColor: e.target.value })}
+                    className="size-9 shrink-0 cursor-pointer rounded-md border border-border bg-transparent p-0.5"
+                  />
+                  <Input
+                    value={branding.brandColor}
+                    onChange={(e) => setBranding({ ...branding, brandColor: e.target.value })}
+                    className="font-mono uppercase"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button onClick={handleSaveBranding} loading={savingBranding}>
+                <Save className="size-4" />
+                Save branding
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Receipt className="size-4 text-muted-foreground" />
@@ -147,6 +274,7 @@ export default function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+        </div>
       )}
     </AppShell>
   );

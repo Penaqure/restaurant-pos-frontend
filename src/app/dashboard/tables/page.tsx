@@ -43,6 +43,14 @@ const CANCELLABLE_ORDER_STATUSES: OrderStatus[] = ["placed", "preparing", "ready
 
 const UNASSIGNED_LOCATION = "Unassigned";
 
+// "12m" while under an hour, "1h 5m" past that -- kitchen/service wait times
+// are tracked in minutes, so seconds-level precision would just be noise.
+function formatWaitTime(placedAt: string): string {
+  const minutes = Math.max(0, Math.floor((Date.now() - new Date(placedAt).getTime()) / 60000));
+  if (minutes < 60) return `${minutes}m`;
+  return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+}
+
 function groupByLocation(tables: RestaurantTable[]) {
   const byLocation = new Map<string, RestaurantTable[]>();
   for (const table of tables) {
@@ -266,6 +274,28 @@ export default function TablesPage() {
                       const Icon = meta.icon;
                       const tableOrders = activeOrdersByTable[t.id] || [];
                       const cancellableOrder = tableOrders.find((o) => CANCELLABLE_ORDER_STATUSES.includes(o.status));
+                      const oldestOrder = tableOrders.reduce<Order | null>(
+                        (oldest, o) => (!oldest || new Date(o.placedAt) < new Date(oldest.placedAt) ? o : oldest),
+                        null
+                      );
+                      const cardBody = (
+                        <>
+                          <p className="text-lg font-bold">{t.name}</p>
+                          <p className="flex items-center gap-1 text-xs opacity-80">
+                            <Users className="size-3" /> Seats {t.capacity}
+                          </p>
+                          <p className="mt-2.5 flex items-center gap-1 text-xs font-semibold">
+                            <Icon className="size-3.5" />
+                            {meta.label}
+                          </p>
+                          {oldestOrder && (
+                            <p className="mt-1 flex items-center gap-1 text-xs font-medium opacity-80">
+                              <Clock className="size-3" />
+                              Waiting {formatWaitTime(oldestOrder.placedAt)}
+                            </p>
+                          )}
+                        </>
+                      );
                       return (
                         <div
                           key={t.id}
@@ -278,16 +308,19 @@ export default function TablesPage() {
                               {tableOrders.length} order{tableOrders.length === 1 ? "" : "s"}
                             </span>
                           )}
-                          <Link href={`/dashboard/pos?tableId=${t.id}`} className="block w-full p-4 pt-7 text-left" title="Take an order for this table">
-                            <p className="text-lg font-bold">{t.name}</p>
-                            <p className="flex items-center gap-1 text-xs opacity-80">
-                              <Users className="size-3" /> Seats {t.capacity}
-                            </p>
-                            <p className="mt-2.5 flex items-center gap-1 text-xs font-semibold">
-                              <Icon className="size-3.5" />
-                              {meta.label}
-                            </p>
-                          </Link>
+                          {t.status === "occupied" ? (
+                            <div className="block w-full cursor-default p-4 pt-7 text-left" title="Table is occupied — use Orders to add items or view the bill">
+                              {cardBody}
+                            </div>
+                          ) : (
+                            <Link
+                              href={`/dashboard/pos?tableId=${t.id}`}
+                              className="block w-full p-4 pt-7 text-left"
+                              title="Take an order for this table"
+                            >
+                              {cardBody}
+                            </Link>
+                          )}
                           <div className="flex flex-wrap justify-end gap-1 px-3 pb-3">
                             <button
                               onClick={() => cycleStatus(t)}

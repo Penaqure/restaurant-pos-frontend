@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useState, CSSProperties } from "react";
+import { ReactNode, useEffect, useState, CSSProperties } from "react";
 import Image from "next/image";
 import { ChefHat, ChevronDown, LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -26,6 +26,21 @@ export default function AppShell({
     ? `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase()
     : "";
   const brandVars = buildBrandRamp(user?.vendor?.brandColor);
+
+  // The browser tab icon should mirror whatever logo is showing as the
+  // "default" logo in the sidebar above -- the vendor's uploaded logo once
+  // set, falling back to the app's own icon when the vendor has none.
+  const logoUrl = user?.vendor?.logoUrl;
+  useEffect(() => {
+    const href = logoUrl ? `${API_ORIGIN}${logoUrl}` : "/favicon.ico";
+    let link = document.querySelector<HTMLLinkElement>("link[rel='icon']");
+    if (!link) {
+      link = document.createElement("link");
+      link.rel = "icon";
+      document.head.appendChild(link);
+    }
+    link.href = href;
+  }, [logoUrl]);
 
   return (
     <div className="flex min-h-screen" style={brandVars as CSSProperties}>
