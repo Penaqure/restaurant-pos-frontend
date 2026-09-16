@@ -37,6 +37,38 @@
   --shadow-pop: 0 12px 32px -12px rgb(200 30 30 / 0.35);
 }
 
+/* Dark mode: system preference (no explicit choice saved yet) ... */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --background: #0f1115;
+    --surface: #0f1115;
+    --surface-card: #191c22;
+    --foreground: #f1f2f6;
+    --muted-foreground: #9497a6;
+    --border: #2a2e37;
+
+    --shadow-soft: 0 1px 2px 0 rgb(0 0 0 / 0.3), 0 1px 1px 0 rgb(0 0 0 / 0.2);
+    --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 8px 24px -8px rgb(0 0 0 / 0.5);
+    --shadow-pop: 0 12px 32px -12px rgb(224 68 48 / 0.45);
+  }
+}
+
+/* ... or an explicit choice, which always wins over system preference. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #0f1115;
+  --surface: #0f1115;
+  --surface-card: #191c22;
+  --foreground: #f1f2f6;
+  --muted-foreground: #9497a6;
+  --border: #2a2e37;
+
+  --shadow-soft: 0 1px 2px 0 rgb(0 0 0 / 0.3), 0 1px 1px 0 rgb(0 0 0 / 0.2);
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 8px 24px -8px rgb(0 0 0 / 0.5);
+  --shadow-pop: 0 12px 32px -12px rgb(224 68 48 / 0.45);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-surface: var(--surface);

@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useBranch } from "@/context/BranchContext";
 import { buildBrandRamp } from "@/lib/brandColor";
 import NotificationBell from "@/components/layout/NotificationBell";
+import ThemeToggle from "@/components/layout/ThemeToggle";
 
 const API_ORIGIN = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/api\/?$/, "");
 
@@ -142,6 +143,7 @@ export default function AppShell({
             </div>
           )}
 
+          <ThemeToggle />
           {user?.vendorId && <NotificationBell />}
         </header>
 
