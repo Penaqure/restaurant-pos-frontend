@@ -218,13 +218,13 @@ export default function PlansPage() {
                           <div className="flex justify-end gap-1">
                             <button
                               onClick={() => startEdit(p)}
-                              className="rounded-md px-2 py-1 text-brand-700 hover:bg-brand-50"
+                              className="rounded-md px-2 py-1 text-brand-700 hover:bg-brand-500/10 dark:text-brand-300"
                             >
                               Edit
                             </button>
                             <button
                               onClick={() => setDeleteTarget(p)}
-                              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-danger hover:bg-red-50"
+                              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-danger hover:bg-danger/10"
                             >
                               <Trash2 className="size-3.5" />
                               Delete

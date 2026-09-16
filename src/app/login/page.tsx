@@ -41,6 +41,10 @@ export default function LoginPage() {
     try {
       const notice = sessionStorage.getItem("billing_login_notice");
       if (notice) {
+        // Reading sessionStorage in a lazy useState initializer instead would
+        // run on the server too (where it's unset) and disagree with the
+        // client's first render -- a hydration mismatch on the error banner.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setError(notice);
         sessionStorage.removeItem("billing_login_notice");
       }
@@ -150,7 +154,7 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <div className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-danger">
+            <div className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-danger dark:border-red-500/30 dark:bg-red-500/10">
               <AlertCircle className="mt-0.5 size-4 shrink-0" />
               <span>{error}</span>
             </div>

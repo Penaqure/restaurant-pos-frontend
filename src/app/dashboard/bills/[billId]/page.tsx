@@ -14,10 +14,10 @@ import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 
 const PAYMENT_STATUS_STYLES: Record<Bill["paymentStatus"], string> = {
-  unpaid: "bg-red-50 text-red-700",
-  partial: "bg-amber-50 text-amber-700",
-  paid: "bg-green-50 text-green-700",
-  refunded: "bg-black/5 text-muted-foreground",
+  unpaid: "bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-300",
+  partial: "bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
+  paid: "bg-green-50 text-green-700 dark:bg-green-500/15 dark:text-green-300",
+  refunded: "bg-foreground/5 text-muted-foreground",
 };
 
 // India's GST is conventionally shown split into CGST + SGST (each half the
@@ -52,6 +52,10 @@ export default function BillDetailPage(props: PageProps<"/dashboard/bills/[billI
 
   useEffect(() => {
     if (pdfSize === null && user?.vendor?.defaultBillSize) {
+      // One-time default once the vendor's setting loads in; pdfSize stays
+      // freely editable afterwards (the print-size dropdown below), so this
+      // can't be computed as plain derived state.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPdfSize(user.vendor.defaultBillSize as BillPdfSize);
     }
   }, [pdfSize, user]);
@@ -251,7 +255,7 @@ export default function BillDetailPage(props: PageProps<"/dashboard/bills/[billI
                         {p.status === "recorded" && (
                           <button
                             onClick={() => handleVoid(p.id)}
-                            className="rounded px-1.5 py-0.5 font-sans text-xs text-danger hover:bg-red-50"
+                            className="rounded px-1.5 py-0.5 font-sans text-xs text-danger hover:bg-danger/10"
                           >
                             Void
                           </button>
@@ -300,7 +304,7 @@ export default function BillDetailPage(props: PageProps<"/dashboard/bills/[billI
                   )}
 
                   {method === "cash" && (
-                    <div className="space-y-2 rounded-lg border border-border bg-black/[0.02] p-2.5">
+                    <div className="space-y-2 rounded-lg border border-border bg-foreground/[0.02] p-2.5">
                       <div className="space-y-1">
                         <label className="text-xs font-medium text-muted-foreground">Cash received from customer</label>
                         <Input

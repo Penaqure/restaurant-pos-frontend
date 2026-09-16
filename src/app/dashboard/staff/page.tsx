@@ -268,7 +268,7 @@ export default function StaffPage() {
                   </thead>
                   <tbody>
                     {visibleStaff.map((s) => (
-                      <tr key={s.id} className={`border-t border-border ${editingId === s.id ? "bg-brand-50/50" : ""}`}>
+                      <tr key={s.id} className={`border-t border-border ${editingId === s.id ? "bg-brand-50/50 dark:bg-brand-500/10" : ""}`}>
                         <td className="px-5 py-3 font-medium text-foreground">
                           {s.firstName} {s.lastName}
                         </td>
@@ -284,7 +284,7 @@ export default function StaffPage() {
                           <div className="flex justify-end gap-1">
                             <button
                               onClick={() => startEdit(s)}
-                              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-brand-700 hover:bg-brand-50"
+                              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-brand-700 hover:bg-brand-500/10 dark:text-brand-300"
                             >
                               <Pencil className="size-3.5" />
                               Edit
@@ -292,7 +292,7 @@ export default function StaffPage() {
                             <button
                               onClick={() => setStatusTarget(s)}
                               className={`inline-flex items-center gap-1 rounded-md px-2 py-1 ${
-                                s.status === "active" ? "text-danger hover:bg-red-50" : "text-brand-700 hover:bg-brand-50"
+                                s.status === "active" ? "text-danger hover:bg-danger/10" : "text-brand-700 hover:bg-brand-500/10 dark:text-brand-300"
                               }`}
                             >
                               <Power className="size-3.5" />

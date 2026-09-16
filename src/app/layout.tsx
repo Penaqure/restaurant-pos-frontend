@@ -10,16 +10,21 @@ import { NotificationProvider } from "@/context/NotificationContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { THEME_STORAGE_KEY } from "@/lib/themeStorageKey";
 
-// Runs before hydration (see the beforeInteractive Script below) so a saved
-// dark-mode choice applies before first paint -- without this, the page
-// would flash light and then snap to dark once React mounts.
+// Runs before hydration (see the beforeInteractive Script below) so the
+// right theme applies before first paint -- without this, the page would
+// flash light and then snap to dark once React mounts. Always resolves and
+// sets data-theme (falling back to system preference when nothing's been
+// chosen yet) rather than only on an explicit choice, since Tailwind's
+// dark: utilities (see globals.css's @custom-variant) need something
+// concrete to key off, not just "attribute absent".
 const NO_FLASH_THEME_SCRIPT = `
   (function () {
     try {
       var stored = localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)});
-      if (stored === "dark" || stored === "light") {
-        document.documentElement.setAttribute("data-theme", stored);
-      }
+      var theme = stored === "dark" || stored === "light"
+        ? stored
+        : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
     } catch (e) {}
   })();
 `;

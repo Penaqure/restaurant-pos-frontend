@@ -91,8 +91,8 @@ export default function VendorNav() {
                     href={link.href}
                     className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                       active
-                        ? "bg-brand-50 text-brand-700"
-                        : "text-muted-foreground hover:bg-black/5 hover:text-foreground"
+                        ? "bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300"
+                        : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
                     }`}
                   >
                     <Icon className={`size-4.5 shrink-0 ${active ? "text-brand-600" : "text-muted-foreground"}`} />

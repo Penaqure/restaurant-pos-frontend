@@ -4,7 +4,6 @@ import { createContext, useContext, useEffect, useRef, useState, ReactNode } fro
 import { io, Socket } from "socket.io-client";
 import { toast } from "react-toastify";
 import { useAuth } from "@/context/AuthContext";
-import { getToken } from "@/lib/authStorage";
 
 const SOCKET_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/api\/?$/, "");
 const MAX_NOTIFICATIONS = 50;
@@ -77,11 +76,11 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     // Notifications are vendor-scoped -- platform super-admins (no vendorId)
     // have nothing to subscribe to.
     if (!user || !user.vendorId) return;
-    const token = getToken();
-    if (!token) return;
     const currentUserId = user.id;
 
-    const socket = io(SOCKET_URL, { auth: { token }, transports: ["websocket"] });
+    // Auth rides the httpOnly cookie on the handshake request rather than a
+    // client-supplied token (see notificationService.js on the backend).
+    const socket = io(SOCKET_URL, { withCredentials: true, transports: ["websocket"] });
     socketRef.current = socket;
 
     function push(n: Omit<AppNotification, "id" | "createdAt" | "read">, actorUserId?: string) {

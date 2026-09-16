@@ -20,12 +20,12 @@ const KITCHEN_NEXT: Partial<Record<OrderStatus, OrderStatus>> = {
 };
 
 const STATUS_META: Record<OrderStatus, { label: string; badge: string }> = {
-  placed: { label: "New", badge: "bg-blue-50 text-blue-700" },
-  preparing: { label: "Preparing", badge: "bg-amber-50 text-amber-700" },
-  ready: { label: "Ready", badge: "bg-purple-50 text-purple-700" },
-  served: { label: "Served", badge: "bg-teal-50 text-teal-700" },
-  completed: { label: "Completed", badge: "bg-green-50 text-green-700" },
-  cancelled: { label: "Cancelled", badge: "bg-black/5 text-muted-foreground" },
+  placed: { label: "New", badge: "bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300" },
+  preparing: { label: "Preparing", badge: "bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300" },
+  ready: { label: "Ready", badge: "bg-purple-50 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300" },
+  served: { label: "Served", badge: "bg-teal-50 text-teal-700 dark:bg-teal-500/15 dark:text-teal-300" },
+  completed: { label: "Completed", badge: "bg-green-50 text-green-700 dark:bg-green-500/15 dark:text-green-300" },
+  cancelled: { label: "Cancelled", badge: "bg-foreground/5 text-muted-foreground" },
 };
 
 function formatTime(iso: string) {

@@ -15,10 +15,10 @@ import SearchInput from "@/components/ui/SearchInput";
 import Select from "@/components/ui/Select";
 
 const PAYMENT_STYLES: Record<Bill["paymentStatus"], string> = {
-  unpaid: "bg-red-50 text-red-700",
-  partial: "bg-amber-50 text-amber-700",
-  paid: "bg-green-50 text-green-700",
-  refunded: "bg-black/5 text-muted-foreground",
+  unpaid: "bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-300",
+  partial: "bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
+  paid: "bg-green-50 text-green-700 dark:bg-green-500/15 dark:text-green-300",
+  refunded: "bg-foreground/5 text-muted-foreground",
 };
 
 const SORT_OPTIONS = [

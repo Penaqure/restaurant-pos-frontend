@@ -24,6 +24,9 @@ export function BranchProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!user || !user.vendorId) {
+      // Nothing to fetch for a platform super_admin (no vendorId) -- resolve
+      // the loading flag immediately rather than leaving it stuck at true.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoading(false);
       return;
     }

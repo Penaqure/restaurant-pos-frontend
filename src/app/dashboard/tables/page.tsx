@@ -21,10 +21,10 @@ import MoveOrderModal from "@/components/tables/MoveOrderModal";
 type Status = RestaurantTable["status"];
 
 const STATUS_META: Record<Status, { card: string; chip: string; icon: typeof CheckCircle2; label: string }> = {
-  available: { card: "bg-green-50 border-green-200 text-green-700", chip: "bg-green-500", icon: CheckCircle2, label: "Available" },
-  occupied: { card: "bg-red-50 border-red-200 text-red-700", chip: "bg-red-500", icon: UserRound, label: "Occupied" },
-  reserved: { card: "bg-amber-50 border-amber-200 text-amber-700", chip: "bg-amber-500", icon: Clock, label: "Reserved" },
-  cleaning: { card: "bg-black/5 border-border text-muted-foreground", chip: "bg-gray-400", icon: Sparkles, label: "Cleaning" },
+  available: { card: "bg-green-50 border-green-200 text-green-700 dark:bg-green-500/10 dark:border-green-500/30 dark:text-green-300", chip: "bg-green-500", icon: CheckCircle2, label: "Available" },
+  occupied: { card: "bg-red-50 border-red-200 text-red-700 dark:bg-red-500/10 dark:border-red-500/30 dark:text-red-300", chip: "bg-red-500", icon: UserRound, label: "Occupied" },
+  reserved: { card: "bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-300", chip: "bg-amber-500", icon: Clock, label: "Reserved" },
+  cleaning: { card: "bg-foreground/5 border-border text-muted-foreground", chip: "bg-gray-400", icon: Sparkles, label: "Cleaning" },
 };
 
 const NEXT_STATUS: Record<Status, Status> = {
@@ -330,14 +330,14 @@ export default function TablesPage() {
                                   ? "Status is locked while this table has an active order"
                                   : `Mark as ${STATUS_META[NEXT_STATUS[t.status]].label}`
                               }
-                              className="flex size-7 items-center justify-center rounded-md bg-white/60 text-current hover:bg-white disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white/60"
+                              className="flex size-7 items-center justify-center rounded-md bg-surface-card/70 text-current hover:bg-surface-card disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-surface-card/70"
                             >
                               <RefreshCw className="size-3.5" />
                             </button>
                             <button
                               onClick={() => setQrTarget(t)}
                               title="Show QR code"
-                              className="flex size-7 items-center justify-center rounded-md bg-white/60 text-current hover:bg-white"
+                              className="flex size-7 items-center justify-center rounded-md bg-surface-card/70 text-current hover:bg-surface-card"
                             >
                               <QrCode className="size-3.5" />
                             </button>
@@ -345,7 +345,7 @@ export default function TablesPage() {
                               <button
                                 onClick={() => setMoveTarget(tableOrders[0])}
                                 title={`Move order ${tableOrders[0].orderNumber} to another table`}
-                                className="flex size-7 items-center justify-center rounded-md bg-white/60 text-current hover:bg-white"
+                                className="flex size-7 items-center justify-center rounded-md bg-surface-card/70 text-current hover:bg-surface-card"
                               >
                                 <ArrowRightLeft className="size-3.5" />
                               </button>
@@ -354,7 +354,7 @@ export default function TablesPage() {
                               <button
                                 onClick={() => setCancelTarget(cancellableOrder)}
                                 title={`Cancel order ${cancellableOrder.orderNumber}`}
-                                className="flex size-7 items-center justify-center rounded-md bg-white/60 text-current hover:bg-white hover:text-danger"
+                                className="flex size-7 items-center justify-center rounded-md bg-surface-card/70 text-current hover:bg-surface-card hover:text-danger"
                               >
                                 <Ban className="size-3.5" />
                               </button>
@@ -364,14 +364,14 @@ export default function TablesPage() {
                                 <button
                                   onClick={() => startEdit(t)}
                                   title="Edit table"
-                                  className="flex size-7 items-center justify-center rounded-md bg-white/60 text-current hover:bg-white"
+                                  className="flex size-7 items-center justify-center rounded-md bg-surface-card/70 text-current hover:bg-surface-card"
                                 >
                                   <Pencil className="size-3.5" />
                                 </button>
                                 <button
                                   onClick={() => setDeleteTarget(t)}
                                   title="Delete table"
-                                  className="flex size-7 items-center justify-center rounded-md bg-white/60 text-current hover:bg-white hover:text-danger"
+                                  className="flex size-7 items-center justify-center rounded-md bg-surface-card/70 text-current hover:bg-surface-card hover:text-danger"
                                 >
                                   <Trash2 className="size-3.5" />
                                 </button>

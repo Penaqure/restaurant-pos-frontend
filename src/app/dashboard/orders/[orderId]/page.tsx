@@ -174,7 +174,7 @@ export default function OrderDetailPage(props: PageProps<"/dashboard/orders/[ord
                 <button
                   onClick={cancel}
                   disabled={updating}
-                  className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm text-danger hover:bg-red-50 disabled:opacity-50"
+                  className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm text-danger hover:bg-danger/10 disabled:opacity-50"
                 >
                   <X className="size-3.5" />
                   Cancel order
@@ -190,7 +190,7 @@ export default function OrderDetailPage(props: PageProps<"/dashboard/orders/[ord
                   <div key={s} className="flex flex-1 items-center">
                     <div
                       className={`flex-1 rounded-full py-1 text-center text-xs capitalize ${
-                        i <= currentIndex ? "bg-brand-600 text-white" : "bg-black/5 text-muted-foreground"
+                        i <= currentIndex ? "bg-brand-600 text-white" : "bg-foreground/5 text-muted-foreground"
                       }`}
                     >
                       {s}

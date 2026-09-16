@@ -91,14 +91,14 @@ export default function ImportMenuModal({
           </div>
           <button
             onClick={onClose}
-            className="flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-black/5"
+            className="flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-foreground/5"
           >
             <X className="size-4" />
           </button>
         </div>
 
         <div className="mt-4 space-y-3">
-          <div className="rounded-lg border border-border bg-black/[0.02] p-3 text-xs text-muted-foreground">
+          <div className="rounded-lg border border-border bg-foreground/[0.02] p-3 text-xs text-muted-foreground">
             <p className="font-medium text-foreground">Columns</p>
             <p className="mt-0.5 font-mono">{copy.columns}</p>
             <p className="mt-2">{copy.note}</p>
@@ -139,7 +139,7 @@ export default function ImportMenuModal({
                 setFile(e.target.files?.[0] || null);
                 setResult(null);
               }}
-              className="block w-full rounded-md border border-border bg-surface-card text-sm text-foreground file:mr-3 file:rounded-md file:border-0 file:bg-brand-50 file:px-3 file:py-2 file:text-xs file:font-medium file:text-brand-700 hover:file:bg-brand-100"
+              className="block w-full rounded-md border border-border bg-surface-card text-sm text-foreground file:mr-3 file:rounded-md file:border-0 file:bg-brand-50 file:px-3 file:py-2 file:text-xs file:font-medium file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-500/15 dark:file:text-brand-300 dark:hover:file:bg-brand-500/25"
             />
           </div>
 

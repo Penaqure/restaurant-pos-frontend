@@ -141,7 +141,7 @@ function PosPageInner() {
                 onClick={() => setPickerItem(item)}
                 className="overflow-hidden rounded-xl border border-border bg-surface-card text-left shadow-soft transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-card"
               >
-                <div className="relative aspect-square w-full bg-black/5 text-muted-foreground">
+                <div className="relative aspect-square w-full bg-foreground/5 text-muted-foreground">
                   {item.imageUrl ? (
                     <Image
                       src={`${API_ORIGIN}${item.imageUrl}`}
@@ -176,7 +176,7 @@ function PosPageInner() {
         <Card className="h-fit">
           <CardContent className="space-y-4">
             {preselectedTable && orderType === "dine_in" && tableId === preselectedTableId ? (
-              <div className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-700">
+              <div className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
                 Ordering for <span className="font-semibold">{preselectedTable.name}</span>
                 {preselectedTable.location && ` · ${preselectedTable.location}`}
               </div>
@@ -242,7 +242,7 @@ function PosPageInner() {
                         </span>
                         <button
                           onClick={() => removeFromCart(l.key)}
-                          className="flex size-6 items-center justify-center rounded text-danger hover:bg-red-50"
+                          className="flex size-6 items-center justify-center rounded text-danger hover:bg-danger/10"
                         >
                           <Trash2 className="size-3.5" />
                         </button>
@@ -254,14 +254,14 @@ function PosPageInner() {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => updateQuantity(l.key, -1)}
-                            className="flex size-6 items-center justify-center rounded border border-border text-muted-foreground hover:bg-black/5"
+                            className="flex size-6 items-center justify-center rounded border border-border text-muted-foreground hover:bg-foreground/5"
                           >
                             <Minus className="size-3" />
                           </button>
                           <span className="w-4 text-center text-xs text-foreground">{l.quantity}</span>
                           <button
                             onClick={() => updateQuantity(l.key, 1)}
-                            className="flex size-6 items-center justify-center rounded border border-border text-muted-foreground hover:bg-black/5"
+                            className="flex size-6 items-center justify-center rounded border border-border text-muted-foreground hover:bg-foreground/5"
                           >
                             <Plus className="size-3" />
                           </button>

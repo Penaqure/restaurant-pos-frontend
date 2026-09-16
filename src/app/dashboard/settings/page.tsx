@@ -131,7 +131,7 @@ export default function SettingsPage() {
             </p>
 
             <div className="flex items-center gap-4">
-              <div className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-black/5 text-muted-foreground">
+              <div className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-foreground/5 text-muted-foreground">
                 {branding.logoUrl ? (
                   <Image
                     src={`${API_ORIGIN}${branding.logoUrl}`}

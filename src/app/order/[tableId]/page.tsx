@@ -104,7 +104,7 @@ export default function PublicOrderPage(props: PageProps<"/order/[tableId]">) {
   if (placed) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-surface px-6 text-center">
-        <span className="flex size-14 items-center justify-center rounded-full bg-green-50 text-green-600">
+        <span className="flex size-14 items-center justify-center rounded-full bg-green-50 text-green-600 dark:bg-green-500/15 dark:text-green-400">
           <CheckCircle2 className="size-8" />
         </span>
         <p className="text-xl font-semibold text-foreground">Order placed!</p>
@@ -127,7 +127,7 @@ export default function PublicOrderPage(props: PageProps<"/order/[tableId]">) {
     <div className="min-h-screen bg-surface pb-24">
       <div className="border-b border-border bg-surface-card px-4 py-4" style={{ borderTopColor: menu.vendor.brandColor }}>
         <div className="mx-auto flex max-w-lg items-center gap-3">
-          <span className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-50 text-brand-600">
+          <span className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-300">
             {menu.vendor.logoUrl ? (
               <Image
                 src={`${API_ORIGIN}${menu.vendor.logoUrl}`}
@@ -184,7 +184,7 @@ export default function PublicOrderPage(props: PageProps<"/order/[tableId]">) {
               onClick={() => setPickerItem(item)}
               className="flex w-full items-center gap-3 rounded-xl border border-border bg-surface-card p-3 text-left shadow-soft transition-colors hover:border-brand-300"
             >
-              <div className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-black/5 text-muted-foreground">
+              <div className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-foreground/5 text-muted-foreground">
                 {item.imageUrl ? (
                   <Image src={`${API_ORIGIN}${item.imageUrl}`} alt={item.name} fill unoptimized className="object-cover" />
                 ) : (
@@ -205,7 +205,7 @@ export default function PublicOrderPage(props: PageProps<"/order/[tableId]">) {
                   {item.variants.length > 0 ? "From " : ""}₹{item.basePrice}
                 </p>
               </div>
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-300">
                 <Plus className="size-4" />
               </span>
             </button>
@@ -242,7 +242,7 @@ export default function PublicOrderPage(props: PageProps<"/order/[tableId]">) {
               </p>
               <button
                 onClick={() => setCartOpen(false)}
-                className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-black/5"
+                className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-foreground/5"
               >
                 <X className="size-4" />
               </button>
@@ -261,7 +261,7 @@ export default function PublicOrderPage(props: PageProps<"/order/[tableId]">) {
                       </span>
                       <button
                         onClick={() => removeFromCart(l.key)}
-                        className="flex size-6 items-center justify-center rounded text-danger hover:bg-red-50"
+                        className="flex size-6 items-center justify-center rounded text-danger hover:bg-danger/10"
                       >
                         <Trash2 className="size-3.5" />
                       </button>
@@ -273,14 +273,14 @@ export default function PublicOrderPage(props: PageProps<"/order/[tableId]">) {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => updateQuantity(l.key, -1)}
-                          className="flex size-6 items-center justify-center rounded border border-border text-muted-foreground hover:bg-black/5"
+                          className="flex size-6 items-center justify-center rounded border border-border text-muted-foreground hover:bg-foreground/5"
                         >
                           <Minus className="size-3" />
                         </button>
                         <span className="w-4 text-center text-xs text-foreground">{l.quantity}</span>
                         <button
                           onClick={() => updateQuantity(l.key, 1)}
-                          className="flex size-6 items-center justify-center rounded border border-border text-muted-foreground hover:bg-black/5"
+                          className="flex size-6 items-center justify-center rounded border border-border text-muted-foreground hover:bg-foreground/5"
                         >
                           <Plus className="size-3" />
                         </button>

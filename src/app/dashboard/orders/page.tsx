@@ -17,12 +17,12 @@ import SearchInput from "@/components/ui/SearchInput";
 import Select from "@/components/ui/Select";
 
 const STATUS_STYLES: Record<string, string> = {
-  placed: "bg-blue-50 text-blue-700",
-  preparing: "bg-amber-50 text-amber-700",
-  ready: "bg-purple-50 text-purple-700",
-  served: "bg-teal-50 text-teal-700",
-  completed: "bg-green-50 text-green-700",
-  cancelled: "bg-black/5 text-muted-foreground",
+  placed: "bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300",
+  preparing: "bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
+  ready: "bg-purple-50 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300",
+  served: "bg-teal-50 text-teal-700 dark:bg-teal-500/15 dark:text-teal-300",
+  completed: "bg-green-50 text-green-700 dark:bg-green-500/15 dark:text-green-300",
+  cancelled: "bg-foreground/5 text-muted-foreground",
 };
 
 // Once an order is served it can no longer be cancelled (mirrors

@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+/* Tailwind's dark: variant tracks this app's data-theme attribute (always
+   set once the page loads -- see the blocking script in layout.tsx and
+   ThemeContext) instead of prefers-color-scheme directly, so dark: utilities
+   agree with an explicit light/dark choice the same way the CSS variables
+   below already do, rather than only ever following system preference. */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
 :root {
   color-scheme: light;
   --background: #f6f7fb;

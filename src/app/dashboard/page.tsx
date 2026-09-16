@@ -69,6 +69,9 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!canViewAnalytics) {
+      // No fetch for this role -- resolve the loading flag rather than
+      // leaving the summary card stuck on its loading state.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSummaryLoading(false);
       return;
     }
@@ -80,6 +83,9 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!canViewMyActivity) {
+      // No fetch for this role -- resolve the loading flag rather than
+      // leaving the activity card stuck on its loading state.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMyActivityLoading(false);
       return;
     }
@@ -97,17 +103,17 @@ export default function DashboardPage() {
 
   const kpis = summary
     ? [
-        { label: "Today's sales", value: currency(summary.today.sales), icon: IndianRupee, tint: "bg-green-50 text-green-600" },
-        { label: "Today's bills", value: String(summary.today.orders), icon: ReceiptText, tint: "bg-blue-50 text-blue-600" },
-        { label: "Avg order today", value: currency(todayAvg), icon: TrendingUp, tint: "bg-purple-50 text-purple-600" },
-        { label: "7-day sales", value: currency(weekSales), icon: Wallet, tint: "bg-amber-50 text-amber-600" },
+        { label: "Today's sales", value: currency(summary.today.sales), icon: IndianRupee, tint: "bg-green-500/10 text-green-600 dark:bg-green-500/15 dark:text-green-400" },
+        { label: "Today's bills", value: String(summary.today.orders), icon: ReceiptText, tint: "bg-blue-500/10 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400" },
+        { label: "Avg order today", value: currency(todayAvg), icon: TrendingUp, tint: "bg-purple-500/10 text-purple-600 dark:bg-purple-500/15 dark:text-purple-400" },
+        { label: "7-day sales", value: currency(weekSales), icon: Wallet, tint: "bg-amber-500/10 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" },
       ]
     : [];
 
   return (
     <AppShell title={user?.vendor?.name || "Dashboard"} nav={<VendorNav />}>
       <div className="mb-6 flex items-center gap-3 rounded-xl border border-border bg-surface-card px-4 py-3 text-sm text-muted-foreground shadow-soft">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-300">
           <Building2 className="size-4.5" />
         </span>
         <span>
@@ -126,9 +132,9 @@ export default function DashboardPage() {
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {visibleLinks.map((l) => (
           <Link key={l.href} href={l.href}>
-            <Card className="h-full transition-colors hover:border-brand-300 hover:bg-brand-50/30">
+            <Card className="h-full transition-colors hover:border-brand-500/40 hover:bg-brand-500/10">
               <CardContent className="flex flex-col items-center justify-center gap-2 p-4 text-center">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-300">
                   <l.icon className="size-4.5" />
                 </span>
                 <p className="text-sm font-medium text-foreground">{l.label}</p>
@@ -215,7 +221,7 @@ export default function DashboardPage() {
         <div className="grid gap-4 sm:grid-cols-2">
           <Card>
             <CardContent className="flex items-center gap-4">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-300">
                 <Users className="size-4.5" />
               </span>
               <div className="min-w-0 flex-1">
@@ -242,7 +248,7 @@ export default function DashboardPage() {
           {user?.role === "owner" && user.vendor && (
             <Card>
               <CardContent className="flex items-center gap-4">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-300">
                   <Building2 className="size-4.5" />
                 </span>
                 <div className="min-w-0 flex-1">
@@ -282,12 +288,12 @@ function MyActivitySection({ activity, showBills }: { activity: MyActivity; show
   const hasBillActivity = billTrend.some((d) => d.orders > 0);
 
   const kpis = [
-    { label: "Your orders today", value: String(ordersCreated.today.orders), icon: ClipboardList, tint: "bg-blue-50 text-blue-600" },
-    { label: "Your order value today", value: currency(ordersCreated.today.sales), icon: IndianRupee, tint: "bg-green-50 text-green-600" },
+    { label: "Your orders today", value: String(ordersCreated.today.orders), icon: ClipboardList, tint: "bg-blue-500/10 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400" },
+    { label: "Your order value today", value: currency(ordersCreated.today.sales), icon: IndianRupee, tint: "bg-green-500/10 text-green-600 dark:bg-green-500/15 dark:text-green-400" },
     ...(showBills
       ? [
-          { label: "Your bills today", value: String(billsGenerated.today.orders), icon: ReceiptText, tint: "bg-purple-50 text-purple-600" },
-          { label: "Your collections today", value: currency(billsGenerated.today.sales), icon: Wallet, tint: "bg-amber-50 text-amber-600" },
+          { label: "Your bills today", value: String(billsGenerated.today.orders), icon: ReceiptText, tint: "bg-purple-500/10 text-purple-600 dark:bg-purple-500/15 dark:text-purple-400" },
+          { label: "Your collections today", value: currency(billsGenerated.today.sales), icon: Wallet, tint: "bg-amber-500/10 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" },
         ]
       : []),
   ];

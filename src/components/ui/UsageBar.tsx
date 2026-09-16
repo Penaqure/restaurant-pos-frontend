@@ -9,7 +9,7 @@ export default function UsageBar({ used, max, label }: { used: number; max: numb
           {used} / {max}
         </span>
       </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-black/5">
+      <div className="h-1.5 overflow-hidden rounded-full bg-foreground/5">
         <div className={`h-full rounded-full ${over ? "bg-danger" : "bg-brand-600"}`} style={{ width: `${pct}%` }} />
       </div>
     </div>

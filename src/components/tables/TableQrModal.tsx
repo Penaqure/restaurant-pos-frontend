@@ -34,7 +34,7 @@ export default function TableQrModal({ table, onClose }: { table: RestaurantTabl
           </div>
           <button
             onClick={onClose}
-            className="flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-black/5"
+            className="flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-foreground/5"
           >
             <X className="size-4" />
           </button>

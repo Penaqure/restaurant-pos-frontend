@@ -5,14 +5,22 @@ import { cn } from "@/lib/cn";
 type Variant = "primary" | "secondary" | "outline" | "ghost" | "danger";
 type Size = "sm" | "md" | "lg";
 
+// secondary/outline/ghost hovers use opacity-based tints of the existing
+// tokens (brand-500/foreground) rather than literal pale swatches like
+// brand-50 or black/5 -- those are tuned to sit on a white card and read as
+// a washed-out or near-invisible patch on a dark one, since the app's brand
+// ramp itself doesn't have a dark-mode variant (see globals.css). An
+// opacity tint of a color that's already correct in both themes adapts for
+// free. primary/danger stay literal: solid, fully-opaque brand colors read
+// fine against either background, same as any filled button.
 const variantClasses: Record<Variant, string> = {
   primary:
     "bg-brand-600 text-white shadow-sm hover:bg-brand-700 active:bg-brand-800 disabled:bg-brand-300",
   secondary:
-    "bg-surface-card text-foreground border border-border shadow-soft hover:bg-brand-50 hover:border-brand-200",
+    "bg-surface-card text-foreground border border-border shadow-soft hover:bg-brand-500/10 hover:border-brand-500/40",
   outline:
-    "border border-border text-foreground hover:bg-brand-50 hover:border-brand-300",
-  ghost: "text-foreground hover:bg-black/5",
+    "border border-border text-foreground hover:bg-brand-500/10 hover:border-brand-500/40",
+  ghost: "text-foreground hover:bg-foreground/5",
   danger: "bg-danger text-white shadow-sm hover:bg-red-600 active:bg-red-700",
 };
 

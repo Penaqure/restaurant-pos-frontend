@@ -208,7 +208,7 @@ export default function DiscountsPage() {
                   </thead>
                   <tbody>
                     {visibleDiscounts.map((d) => (
-                      <tr key={d.id} className={`border-t border-border ${editingId === d.id ? "bg-brand-50/50" : ""}`}>
+                      <tr key={d.id} className={`border-t border-border ${editingId === d.id ? "bg-brand-50/50 dark:bg-brand-500/10" : ""}`}>
                         <td className="px-5 py-3 font-medium text-foreground">{d.code}</td>
                         <td className="px-5 py-3 text-muted-foreground">
                           {d.type === "percentage" ? `${d.value}%` : `₹${d.value}`}
@@ -223,14 +223,14 @@ export default function DiscountsPage() {
                             <div className="flex justify-end gap-1">
                               <button
                                 onClick={() => startEdit(d)}
-                                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-brand-700 hover:bg-brand-50"
+                                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-brand-700 hover:bg-brand-500/10 dark:text-brand-300"
                               >
                                 <Pencil className="size-3.5" />
                                 Edit
                               </button>
                               <button
                                 onClick={() => setDeleteTarget(d)}
-                                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-danger hover:bg-red-50"
+                                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-danger hover:bg-danger/10"
                               >
                                 <Trash2 className="size-3.5" />
                                 Delete

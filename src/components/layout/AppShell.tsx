@@ -80,7 +80,7 @@ export default function AppShell({
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-black/5 lg:hidden"
+            className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-foreground/5 lg:hidden"
           >
             <X className="size-4" />
           </button>
@@ -91,7 +91,7 @@ export default function AppShell({
         {user && (
           <div className="border-t border-border p-3">
             <div className="flex items-center gap-2.5 rounded-lg px-2 py-2">
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-semibold text-brand-700">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-semibold text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">
                 {initials}
               </span>
               <div className="min-w-0 flex-1">
@@ -105,7 +105,7 @@ export default function AppShell({
               <button
                 onClick={logout}
                 title="Log out"
-                className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-red-50 hover:text-danger"
+                className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-danger/10 hover:text-danger"
               >
                 <LogOut className="size-4" />
               </button>
@@ -119,7 +119,7 @@ export default function AppShell({
           <div className="flex min-w-0 flex-1 items-center gap-3">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="flex size-9 shrink-0 items-center justify-center rounded-md text-foreground hover:bg-black/5 lg:hidden"
+              className="flex size-9 shrink-0 items-center justify-center rounded-md text-foreground hover:bg-foreground/5 lg:hidden"
             >
               <Menu className="size-5" />
             </button>
@@ -131,7 +131,7 @@ export default function AppShell({
               <select
                 value={activeBranchId || ""}
                 onChange={(e) => setBranch(e.target.value)}
-                className="max-w-[9.5rem] appearance-none rounded-md border border-border bg-surface-card py-1.5 pl-3 pr-8 text-sm text-foreground focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100 sm:max-w-none"
+                className="max-w-[9.5rem] appearance-none rounded-md border border-border bg-surface-card py-1.5 pl-3 pr-8 text-sm text-foreground focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 sm:max-w-none"
               >
                 {branches.map((b) => (
                   <option key={b.id} value={b.id}>

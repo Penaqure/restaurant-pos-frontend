@@ -2,8 +2,8 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { login as loginRequest, fetchMe, CurrentUser } from "@/services/authService";
-import { getToken, setToken, clearAuth } from "@/lib/authStorage";
+import { login as loginRequest, logout as logoutRequest, fetchMe, CurrentUser } from "@/services/authService";
+import { clearAuth } from "@/lib/authStorage";
 
 type AuthContextValue = {
   user: CurrentUser | null;
@@ -21,10 +21,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    if (!getToken()) {
-      setLoading(false);
-      return;
-    }
+    // The auth cookie is httpOnly, so there's nothing to check client-side
+    // before asking -- /auth/me itself is the source of truth for whether a
+    // session is live.
     fetchMe()
       .then(setUser)
       .catch(() => clearAuth())
@@ -32,14 +31,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function login(email: string, password: string) {
-    const { token } = await loginRequest(email, password);
-    setToken(token);
+    // The backend sets the auth cookie directly on this response (Set-Cookie);
+    // no token ever passes through this JS.
+    await loginRequest(email, password);
     const me = await fetchMe();
     setUser(me);
     return me;
   }
 
   function logout() {
+    // Fire-and-forget: don't block navigation on the network round trip,
+    // but still ask the server to clear the httpOnly cookie.
+    logoutRequest().catch(() => {});
     clearAuth();
     setUser(null);
     router.push("/login");

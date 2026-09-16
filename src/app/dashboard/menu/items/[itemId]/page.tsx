@@ -326,13 +326,13 @@ export default function MenuItemDetailPage(props: PageProps<"/dashboard/menu/ite
                       <span className="flex gap-1 font-sans">
                         <button
                           onClick={() => startEditVariant(v)}
-                          className="rounded px-1.5 py-0.5 text-xs text-brand-700 hover:bg-brand-50"
+                          className="rounded px-1.5 py-0.5 text-xs text-brand-700 hover:bg-brand-500/10 dark:text-brand-300"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => deleteVariant(item.id, v.id).then(refresh)}
-                          className="rounded px-1.5 py-0.5 text-xs text-danger hover:bg-red-50"
+                          className="rounded px-1.5 py-0.5 text-xs text-danger hover:bg-danger/10"
                         >
                           Remove
                         </button>
@@ -399,13 +399,13 @@ export default function MenuItemDetailPage(props: PageProps<"/dashboard/menu/ite
                       <span className="flex gap-1 font-sans">
                         <button
                           onClick={() => startEditAddon(a)}
-                          className="rounded px-1.5 py-0.5 text-xs text-brand-700 hover:bg-brand-50"
+                          className="rounded px-1.5 py-0.5 text-xs text-brand-700 hover:bg-brand-500/10 dark:text-brand-300"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => deleteAddon(item.id, a.id).then(refresh)}
-                          className="rounded px-1.5 py-0.5 text-xs text-danger hover:bg-red-50"
+                          className="rounded px-1.5 py-0.5 text-xs text-danger hover:bg-danger/10"
                         >
                           Remove
                         </button>
@@ -448,7 +448,7 @@ export default function MenuItemDetailPage(props: PageProps<"/dashboard/menu/ite
       <div className="space-y-6">
         <Card>
           <CardContent className="space-y-3">
-            <div className="flex h-40 w-full items-center justify-center overflow-hidden rounded-md bg-black/5 text-muted-foreground">
+            <div className="flex h-40 w-full items-center justify-center overflow-hidden rounded-md bg-foreground/5 text-muted-foreground">
               {item.imageUrl ? (
                 <Image
                   src={`${API_ORIGIN}${item.imageUrl}`}
@@ -474,7 +474,7 @@ export default function MenuItemDetailPage(props: PageProps<"/dashboard/menu/ite
               </Button>
               <button
                 onClick={() => setDeleteItemConfirm(true)}
-                className="flex w-full items-center justify-center gap-1 rounded-md px-2 py-1.5 text-sm text-danger hover:bg-red-50"
+                className="flex w-full items-center justify-center gap-1 rounded-md px-2 py-1.5 text-sm text-danger hover:bg-danger/10"
               >
                 <Trash2 className="size-3.5" />
                 Delete item

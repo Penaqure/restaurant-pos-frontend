@@ -87,7 +87,7 @@ export default function AddItemsModal({
           </div>
           <button
             onClick={onClose}
-            className="flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-black/5"
+            className="flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-foreground/5"
           >
             <X className="size-4" />
           </button>
@@ -128,7 +128,7 @@ export default function AddItemsModal({
                   onClick={() => setPickerItem(item)}
                   className="overflow-hidden rounded-xl border border-border bg-surface-card text-left shadow-soft transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-card"
                 >
-                  <div className="relative aspect-square w-full bg-black/5 text-muted-foreground">
+                  <div className="relative aspect-square w-full bg-foreground/5 text-muted-foreground">
                     {item.imageUrl ? (
                       <Image
                         src={`${API_ORIGIN}${item.imageUrl}`}
@@ -179,7 +179,7 @@ export default function AddItemsModal({
                         </span>
                         <button
                           onClick={() => removeFromCart(l.key)}
-                          className="flex size-6 items-center justify-center rounded text-danger hover:bg-red-50"
+                          className="flex size-6 items-center justify-center rounded text-danger hover:bg-danger/10"
                         >
                           <Trash2 className="size-3.5" />
                         </button>
@@ -191,14 +191,14 @@ export default function AddItemsModal({
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => updateQuantity(l.key, -1)}
-                            className="flex size-6 items-center justify-center rounded border border-border text-muted-foreground hover:bg-black/5"
+                            className="flex size-6 items-center justify-center rounded border border-border text-muted-foreground hover:bg-foreground/5"
                           >
                             <Minus className="size-3" />
                           </button>
                           <span className="w-4 text-center text-xs text-foreground">{l.quantity}</span>
                           <button
                             onClick={() => updateQuantity(l.key, 1)}
-                            className="flex size-6 items-center justify-center rounded border border-border text-muted-foreground hover:bg-black/5"
+                            className="flex size-6 items-center justify-center rounded border border-border text-muted-foreground hover:bg-foreground/5"
                           >
                             <Plus className="size-3" />
                           </button>

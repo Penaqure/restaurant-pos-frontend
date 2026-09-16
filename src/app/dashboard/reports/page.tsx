@@ -91,6 +91,9 @@ export default function ReportsPage() {
   const [forbidden, setForbidden] = useState(false);
 
   useEffect(() => {
+    // Flips back to true on every `days` change, before the refetch below
+    // resolves -- keeps the loading indicator honest while switching ranges.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     getAnalytics(days)
       .then((data) => {
@@ -169,16 +172,16 @@ function ReportsBody({ analytics }: { analytics: Analytics }) {
   const cancelledRate = overview.totalOrdersPlaced > 0 ? (overview.cancelledOrders / overview.totalOrdersPlaced) * 100 : 0;
 
   const kpis = [
-    { label: "Total sales", value: currency(overview.sales), icon: IndianRupee, tint: "bg-green-50 text-green-600" },
-    { label: "Bills generated", value: String(overview.orders), icon: ReceiptText, tint: "bg-blue-50 text-blue-600" },
-    { label: "Avg order value", value: currency(overview.avgOrderValue), icon: TrendingUp, tint: "bg-purple-50 text-purple-600" },
-    { label: "Tax collected", value: currency(overview.taxCollected), icon: Landmark, tint: "bg-amber-50 text-amber-600" },
-    { label: "Discount given", value: currency(overview.discountGiven), icon: Tag, tint: "bg-pink-50 text-pink-600" },
+    { label: "Total sales", value: currency(overview.sales), icon: IndianRupee, tint: "bg-green-50 text-green-600 dark:bg-green-500/15 dark:text-green-400" },
+    { label: "Bills generated", value: String(overview.orders), icon: ReceiptText, tint: "bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400" },
+    { label: "Avg order value", value: currency(overview.avgOrderValue), icon: TrendingUp, tint: "bg-purple-50 text-purple-600 dark:bg-purple-500/15 dark:text-purple-400" },
+    { label: "Tax collected", value: currency(overview.taxCollected), icon: Landmark, tint: "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" },
+    { label: "Discount given", value: currency(overview.discountGiven), icon: Tag, tint: "bg-pink-50 text-pink-600 dark:bg-pink-500/15 dark:text-pink-400" },
     {
       label: "Cancelled orders",
       value: `${overview.cancelledOrders} (${cancelledRate.toFixed(1)}%)`,
       icon: Ban,
-      tint: "bg-red-50 text-red-600",
+      tint: "bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400",
     },
   ];
 
@@ -423,7 +426,7 @@ function ReportsBody({ analytics }: { analytics: Analytics }) {
                       <tr key={b.branchId} className="border-t border-border">
                         <td className="px-5 py-3">
                           <span className="flex items-center gap-2 font-medium text-foreground">
-                            <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+                            <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-300">
                               <Building2 className="size-3.5" />
                             </span>
                             {b.branchName}
@@ -433,7 +436,7 @@ function ReportsBody({ analytics }: { analytics: Analytics }) {
                         <td className="px-5 py-3 font-mono text-muted-foreground">{currency(b.sales)}</td>
                         <td className="px-5 py-3">
                           <div className="flex items-center gap-2">
-                            <div className="h-1.5 w-20 overflow-hidden rounded-full bg-black/5">
+                            <div className="h-1.5 w-20 overflow-hidden rounded-full bg-foreground/5">
                               <div className="h-full rounded-full bg-brand-600" style={{ width: `${pct}%` }} />
                             </div>
                             <span className="text-xs text-muted-foreground">{pct.toFixed(0)}%</span>
@@ -475,7 +478,7 @@ function ReportsBody({ analytics }: { analytics: Analytics }) {
                       <tr key={d.code} className="border-t border-border">
                         <td className="px-5 py-3">
                           <span className="flex items-center gap-2 font-medium text-foreground">
-                            <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-pink-50 text-pink-600">
+                            <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-pink-50 text-pink-600 dark:bg-pink-500/15 dark:text-pink-400">
                               <Tag className="size-3.5" />
                             </span>
                             {d.code}
@@ -517,7 +520,7 @@ function ReportsBody({ analytics }: { analytics: Analytics }) {
                       <tr key={s.userId} className="border-t border-border">
                         <td className="px-5 py-3">
                           <span className="flex items-center gap-2 font-medium text-foreground">
-                            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-100 text-[10px] font-semibold text-brand-700">
+                            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-100 text-[10px] font-semibold text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">
                               {initialsOf(s.name)}
                             </span>
                             {s.name}

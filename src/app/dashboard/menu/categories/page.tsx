@@ -27,14 +27,14 @@ type SortOption = (typeof SORT_OPTIONS)[number]["value"];
 // never shifts on refresh, without needing an actual color/image field on
 // the model.
 const SWATCHES = [
-  "bg-brand-50 text-brand-600",
-  "bg-blue-50 text-blue-600",
-  "bg-amber-50 text-amber-600",
-  "bg-green-50 text-green-600",
-  "bg-pink-50 text-pink-600",
-  "bg-teal-50 text-teal-600",
-  "bg-purple-50 text-purple-600",
-  "bg-orange-50 text-orange-600",
+  "bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-300",
+  "bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400",
+  "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400",
+  "bg-green-50 text-green-600 dark:bg-green-500/15 dark:text-green-400",
+  "bg-pink-50 text-pink-600 dark:bg-pink-500/15 dark:text-pink-400",
+  "bg-teal-50 text-teal-600 dark:bg-teal-500/15 dark:text-teal-400",
+  "bg-purple-50 text-purple-600 dark:bg-purple-500/15 dark:text-purple-400",
+  "bg-orange-50 text-orange-600 dark:bg-orange-500/15 dark:text-orange-400",
 ];
 
 function swatchFor(id: string) {
@@ -190,7 +190,7 @@ export default function CategoriesPage() {
                   <div
                     key={c.id}
                     className={`group relative rounded-xl border p-4 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-card ${
-                      editingId === c.id ? "border-brand-400 ring-2 ring-brand-100" : "border-border bg-surface-card"
+                      editingId === c.id ? "border-brand-400 ring-2 ring-brand-500/20" : "border-border bg-surface-card"
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -211,14 +211,14 @@ export default function CategoriesPage() {
                           <button
                             onClick={() => startEdit(c)}
                             title="Edit category"
-                            className="flex size-7 items-center justify-center rounded-md text-brand-700 hover:bg-brand-50"
+                            className="flex size-7 items-center justify-center rounded-md text-brand-700 hover:bg-brand-500/10 dark:text-brand-300"
                           >
                             <Pencil className="size-3.5" />
                           </button>
                           <button
                             onClick={() => setDeleteTarget(c)}
                             title="Delete category"
-                            className="flex size-7 items-center justify-center rounded-md text-danger hover:bg-red-50"
+                            className="flex size-7 items-center justify-center rounded-md text-danger hover:bg-danger/10"
                           >
                             <Trash2 className="size-3.5" />
                           </button>

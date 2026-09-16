@@ -23,13 +23,19 @@ export type CurrentUser = {
 };
 
 type LoginResponse = {
-  token: string;
   user: Pick<CurrentUser, "id" | "vendorId" | "branchId" | "firstName" | "lastName" | "email" | "role">;
 };
 
+// The token itself is never in this response -- login sets it as an
+// httpOnly cookie server-side (see authController.js), so it's never
+// reachable from page JS.
 export async function login(email: string, password: string) {
   const { data } = await axiosInstance.post<LoginResponse>("/auth/login", { email, password });
   return data;
+}
+
+export async function logout() {
+  await axiosInstance.post("/auth/logout");
 }
 
 export async function fetchMe() {

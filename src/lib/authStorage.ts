@@ -1,21 +1,9 @@
-// Token lives in a plain (non-httpOnly) cookie -- set from the client after
-// login -- so both the browser (axios) and the server-side proxy (route
-// protection) can read it. Swap for an httpOnly cookie issued by the backend
-// once the login endpoint sets it directly.
-const COOKIE_NAME = "billing_token";
-
-export function setToken(token: string) {
-  if (typeof document === "undefined") return;
-  document.cookie = `${COOKIE_NAME}=${token}; path=/; max-age=${60 * 60 * 24}; samesite=lax`;
-}
-
-export function getToken(): string | null {
-  if (typeof document === "undefined") return null;
-  const match = document.cookie.match(new RegExp(`(?:^|; )${COOKIE_NAME}=([^;]*)`));
-  return match ? decodeURIComponent(match[1]) : null;
-}
-
+// The auth token itself lives in an httpOnly cookie set by the backend on
+// login (see restaurant-billing-backend/controllers/auth/authController.js)
+// -- deliberately unreadable from here, which is what keeps an XSS bug from
+// being able to exfiltrate it. This module only clears local UI state;
+// actually ending the session happens server-side via authService.logout().
 export function clearAuth() {
-  if (typeof document === "undefined") return;
-  document.cookie = `${COOKIE_NAME}=; path=/; max-age=0`;
+  // Nothing to do client-side: no token or user data is cached in
+  // localStorage/cookies outside the httpOnly cookie itself.
 }

@@ -70,7 +70,7 @@ export default function ItemPickerModal({
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-black/5 text-muted-foreground">
+            <div className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-foreground/5 text-muted-foreground">
               {item.imageUrl ? (
                 <Image src={`${API_ORIGIN}${item.imageUrl}`} alt={item.name} fill unoptimized className="object-cover" />
               ) : (
@@ -91,7 +91,7 @@ export default function ItemPickerModal({
           </div>
           <button
             onClick={onClose}
-            className="flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-black/5"
+            className="flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-foreground/5"
           >
             <X className="size-4" />
           </button>
@@ -143,14 +143,14 @@ export default function ItemPickerModal({
           <div className="flex items-center gap-2">
             <button
               onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-              className="flex size-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-black/5"
+              className="flex size-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-foreground/5"
             >
               <Minus className="size-3.5" />
             </button>
             <span className="w-6 text-center text-sm text-foreground">{quantity}</span>
             <button
               onClick={() => setQuantity((q) => q + 1)}
-              className="flex size-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-black/5"
+              className="flex size-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-foreground/5"
             >
               <Plus className="size-3.5" />
             </button>

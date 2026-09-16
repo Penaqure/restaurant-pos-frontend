@@ -143,7 +143,7 @@ export default function MenuItemsPage() {
             onClick={() => setVegFilter(v)}
             className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium capitalize transition-colors ${
               vegFilter === v
-                ? "border-brand-600 bg-brand-50 text-brand-700"
+                ? "border-brand-600 bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300"
                 : "border-border bg-surface-card text-muted-foreground hover:border-brand-300"
             }`}
           >
@@ -175,7 +175,7 @@ export default function MenuItemsPage() {
                 !item.isAvailable ? "opacity-60" : ""
               }`}
             >
-              <div className="relative aspect-square w-full bg-black/5 text-muted-foreground">
+              <div className="relative aspect-square w-full bg-foreground/5 text-muted-foreground">
                 {item.imageUrl ? (
                   <Image
                     src={`${API_ORIGIN}${item.imageUrl}`}

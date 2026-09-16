@@ -199,7 +199,7 @@ export default function NewMenuItemPage() {
                   <button
                     type="button"
                     onClick={() => setVariants((rows) => rows.filter((_, idx) => idx !== i))}
-                    className="flex size-8 shrink-0 items-center justify-center rounded-md text-danger hover:bg-red-50"
+                    className="flex size-8 shrink-0 items-center justify-center rounded-md text-danger hover:bg-danger/10"
                   >
                     <Trash2 className="size-4" />
                   </button>
@@ -239,7 +239,7 @@ export default function NewMenuItemPage() {
                   <button
                     type="button"
                     onClick={() => setAddons((rows) => rows.filter((_, idx) => idx !== i))}
-                    className="flex size-8 shrink-0 items-center justify-center rounded-md text-danger hover:bg-red-50"
+                    className="flex size-8 shrink-0 items-center justify-center rounded-md text-danger hover:bg-danger/10"
                   >
                     <Trash2 className="size-4" />
                   </button>

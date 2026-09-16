@@ -194,7 +194,7 @@ export default function VendorDetailPage(props: PageProps<"/platform/vendors/[ve
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-4">
-              <div className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-black/5 text-muted-foreground">
+              <div className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-foreground/5 text-muted-foreground">
                 {vendor.logoUrl ? (
                   <Image src={`${API_ORIGIN}${vendor.logoUrl}`} alt={vendor.name} fill unoptimized className="object-cover" />
                 ) : (

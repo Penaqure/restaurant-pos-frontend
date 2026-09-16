@@ -5,10 +5,10 @@ import { THEME_STORAGE_KEY as STORAGE_KEY } from "@/lib/themeStorageKey";
 
 export type Theme = "light" | "dark";
 
-// The blocking script (see layout.tsx) only sets data-theme on <html> once
-// the user has made an explicit choice; before that, dark mode comes purely
-// from the prefers-color-scheme media query in globals.css. Mirrors that
-// same fallback so the toggle's icon matches what's actually on screen.
+// The blocking script (see layout.tsx) always sets data-theme on <html>
+// before first paint -- either the stored choice or, if there isn't one,
+// the resolved system preference. Mirrors that same resolution so the
+// toggle's icon matches what's actually on screen.
 function readCurrentTheme(): Theme {
   if (typeof document === "undefined") return "light";
   const applied = document.documentElement.getAttribute("data-theme");
@@ -16,21 +16,47 @@ function readCurrentTheme(): Theme {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
+function hasExplicitChoice(): boolean {
+  try {
+    return localStorage.getItem(STORAGE_KEY) !== null;
+  } catch {
+    return false;
+  }
+}
+
 type ThemeContextValue = { theme: Theme; toggleTheme: () => void };
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  // A lazy initializer runs during render (not inside an effect), so this
-  // reads the DOM/media-query state the blocking script already applied
-  // without the extra render-then-correct flash a useEffect would cause.
-  const [theme, setThemeState] = useState<Theme>(readCurrentTheme);
+  // Must start as "light" to match what the server renders -- the server
+  // has no access to localStorage/matchMedia, so readCurrentTheme() always
+  // resolves to "light" there. Using the real (possibly browser-only) value
+  // here would make the client's first hydration pass disagree with the
+  // server-rendered HTML on anything that reads `theme` (e.g. ThemeToggle's
+  // icon/label), which React reports as a hydration error. The actual page
+  // colors are unaffected either way -- those come from the blocking script
+  // in layout.tsx setting data-theme on <html> before first paint, not from
+  // this state. The effect below brings this state in sync right after
+  // mount, once it's safe to read the DOM/media query.
+  const [theme, setThemeState] = useState<Theme>("light");
 
   useEffect(() => {
+    // Deliberate post-hydration correction, not a state/external-system
+    // sync: reading the real theme during render (client or server) is
+    // exactly what caused the hydration mismatch this state is initialized
+    // to avoid.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setThemeState(readCurrentTheme());
+
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     function onChange(e: MediaQueryListEvent) {
-      // Only follow live system changes while the user hasn't overridden it.
-      if (!document.documentElement.getAttribute("data-theme")) {
-        setThemeState(e.matches ? "dark" : "light");
+      // Only follow live system changes while the user hasn't explicitly
+      // chosen a theme (data-theme is always set now, so its presence alone
+      // can't signal that anymore -- localStorage is the real source of truth).
+      if (!hasExplicitChoice()) {
+        const next: Theme = e.matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", next);
+        setThemeState(next);
       }
     }
     media.addEventListener("change", onChange);
