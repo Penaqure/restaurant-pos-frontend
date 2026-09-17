@@ -2,7 +2,8 @@
 
 import { ReactNode, useEffect, useState, CSSProperties } from "react";
 import Image from "next/image";
-import { ChefHat, ChevronDown, LogOut, Menu, X } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, ChefHat, ChevronDown, LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useBranch } from "@/context/BranchContext";
 import { buildBrandRamp } from "@/lib/brandColor";
@@ -13,10 +14,17 @@ const API_ORIGIN = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/api\/
 
 export default function AppShell({
   title,
+  backHref,
   nav,
   children,
 }: {
   title: string;
+  // A details page (a specific bill/order/menu item/vendor) passes the URL
+  // of the list it was reached from -- a real link rather than
+  // router.back() so it still goes somewhere sensible when the page was
+  // opened directly (a bookmark, a shared link, a refresh) rather than
+  // navigated to from within the app.
+  backHref?: string;
   nav?: ReactNode;
   children: ReactNode;
 }) {
@@ -123,6 +131,15 @@ export default function AppShell({
             >
               <Menu className="size-5" />
             </button>
+            {backHref && (
+              <Link
+                href={backHref}
+                title="Back"
+                className="flex size-9 shrink-0 items-center justify-center rounded-md text-foreground hover:bg-foreground/5"
+              >
+                <ArrowLeft className="size-4.5" />
+              </Link>
+            )}
             <h1 className="truncate text-base font-semibold text-foreground lg:text-lg">{title}</h1>
           </div>
 

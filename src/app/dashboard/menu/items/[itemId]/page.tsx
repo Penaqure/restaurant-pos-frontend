@@ -199,7 +199,7 @@ export default function MenuItemDetailPage(props: PageProps<"/dashboard/menu/ite
 
   if (loading || !item) {
     return (
-      <AppShell title="Menu item" nav={<VendorNav />}>
+      <AppShell title="Menu item" backHref="/dashboard/menu/items" nav={<VendorNav />}>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="size-4 animate-spin" />
           Loading...
@@ -210,7 +210,7 @@ export default function MenuItemDetailPage(props: PageProps<"/dashboard/menu/ite
 
   if (!canManage) {
     return (
-      <AppShell title={item.name} nav={<VendorNav />}>
+      <AppShell title={item.name} backHref="/dashboard/menu/items" nav={<VendorNav />}>
         <p className="text-sm text-muted-foreground">
           Your role doesn&apos;t have access to menu management. Ask an owner or manager if you need this.
         </p>
@@ -219,7 +219,7 @@ export default function MenuItemDetailPage(props: PageProps<"/dashboard/menu/ite
   }
 
   return (
-    <AppShell title={item.name} nav={<VendorNav />}>
+    <AppShell title={item.name} backHref="/dashboard/menu/items" nav={<VendorNav />}>
       <div className="grid gap-6 lg:grid-cols-[2fr_1fr] lg:items-start">
       <div className="space-y-6">
         <Card>

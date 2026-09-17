@@ -168,7 +168,7 @@ export default function VendorDetailPage(props: PageProps<"/platform/vendors/[ve
 
   if (loading || !vendor) {
     return (
-      <AppShell title="Vendor" nav={<PlatformNav />}>
+      <AppShell title="Vendor" backHref="/platform" nav={<PlatformNav />}>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="size-4 animate-spin" />
           Loading...
@@ -182,7 +182,7 @@ export default function VendorDetailPage(props: PageProps<"/platform/vendors/[ve
   const effectiveMaxBranches = selectedPlan?.maxBranches ?? vendor.plan?.maxBranches;
 
   return (
-    <AppShell title={vendor.name} nav={<PlatformNav />}>
+    <AppShell title={vendor.name} backHref="/platform" nav={<PlatformNav />}>
       <div className="grid gap-6 lg:grid-cols-[2fr_1fr] lg:items-start">
       <div className="space-y-6">
         <Card>

@@ -136,7 +136,7 @@ export default function OrderDetailPage(props: PageProps<"/dashboard/orders/[ord
 
   if (loading || !order) {
     return (
-      <AppShell title="Order" nav={<VendorNav />}>
+      <AppShell title="Order" backHref="/dashboard/orders" nav={<VendorNav />}>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="size-4 animate-spin" />
           Loading...
@@ -153,7 +153,7 @@ export default function OrderDetailPage(props: PageProps<"/dashboard/orders/[ord
   const hasSidebar = canMoveTable || canGenerateBill;
 
   return (
-    <AppShell title={order.orderNumber} nav={<VendorNav />}>
+    <AppShell title={order.orderNumber} backHref="/dashboard/orders" nav={<VendorNav />}>
       <div className={hasSidebar ? "grid gap-6 lg:grid-cols-[2fr_1fr] lg:items-start" : "grid gap-6"}>
       <div className="space-y-6">
         <Card>

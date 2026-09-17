@@ -120,7 +120,7 @@ export default function BillDetailPage(props: PageProps<"/dashboard/bills/[billI
 
   if (loading || !bill) {
     return (
-      <AppShell title="Bill" nav={<VendorNav />}>
+      <AppShell title="Bill" backHref="/dashboard/bills" nav={<VendorNav />}>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="size-4 animate-spin" />
           Loading...
@@ -130,7 +130,7 @@ export default function BillDetailPage(props: PageProps<"/dashboard/bills/[billI
   }
 
   return (
-    <AppShell title={bill.billNumber} nav={<VendorNav />}>
+    <AppShell title={bill.billNumber} backHref="/dashboard/bills" nav={<VendorNav />}>
       <div className="grid gap-6 lg:grid-cols-[2fr_1fr] lg:items-start">
         <Card>
           <CardHeader>
