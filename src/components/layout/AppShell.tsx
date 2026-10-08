@@ -9,6 +9,7 @@ import { useBranch } from "@/context/BranchContext";
 import { buildBrandRamp } from "@/lib/brandColor";
 import NotificationBell from "@/components/layout/NotificationBell";
 import ThemeToggle from "@/components/layout/ThemeToggle";
+import ChatbotWidget from "@/components/layout/ChatbotWidget";
 
 const API_ORIGIN = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/api\/?$/, "");
 
@@ -166,6 +167,8 @@ export default function AppShell({
 
         <main className="min-w-0 flex-1 bg-surface p-4 lg:p-6">{children}</main>
       </div>
+
+      {user?.vendorId && (user.role === "owner" || user.role === "manager") && <ChatbotWidget />}
     </div>
   );
 }
