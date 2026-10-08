@@ -6,6 +6,7 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Toolti
 import AppShell from "@/components/layout/AppShell";
 import VendorNav from "@/components/layout/VendorNav";
 import { useAuth } from "@/context/AuthContext";
+import { formatCurrency } from "@/lib/currency";
 import { listStaff } from "@/services/staffService";
 import { getSummary, ReportSummary, getMyActivity, MyActivity } from "@/services/reportService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -32,10 +33,6 @@ const CAN_VIEW_MY_ACTIVITY = new Set(["waiter", "cashier"]);
 
 const AXIS_STYLE = { fontSize: 12, fill: "#6b7280" };
 
-function currency(n: number) {
-  return `₹${n.toFixed(2)}`;
-}
-
 function formatShortDate(iso: string) {
   const [, m, d] = iso.split("-");
   return `${d}/${m}`;
@@ -51,6 +48,7 @@ const QUICK_LINKS = [
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const currencyCode = user?.vendor?.currency;
   const [staffCount, setStaffCount] = useState<number | null>(null);
   const [summary, setSummary] = useState<ReportSummary | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(true);
@@ -103,10 +101,10 @@ export default function DashboardPage() {
 
   const kpis = summary
     ? [
-        { label: "Today's sales", value: currency(summary.today.sales), icon: IndianRupee, tint: "bg-green-500/10 text-green-600 dark:bg-green-500/15 dark:text-green-400" },
+        { label: "Today's sales", value: formatCurrency(summary.today.sales, currencyCode), icon: IndianRupee, tint: "bg-green-500/10 text-green-600 dark:bg-green-500/15 dark:text-green-400" },
         { label: "Today's bills", value: String(summary.today.orders), icon: ReceiptText, tint: "bg-blue-500/10 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400" },
-        { label: "Avg order today", value: currency(todayAvg), icon: TrendingUp, tint: "bg-purple-500/10 text-purple-600 dark:bg-purple-500/15 dark:text-purple-400" },
-        { label: "7-day sales", value: currency(weekSales), icon: Wallet, tint: "bg-amber-500/10 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" },
+        { label: "Avg order today", value: formatCurrency(todayAvg, currencyCode), icon: TrendingUp, tint: "bg-purple-500/10 text-purple-600 dark:bg-purple-500/15 dark:text-purple-400" },
+        { label: "7-day sales", value: formatCurrency(weekSales, currencyCode), icon: Wallet, tint: "bg-amber-500/10 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" },
       ]
     : [];
 
@@ -187,10 +185,10 @@ export default function DashboardPage() {
                       <BarChart data={trendData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
                         <CartesianGrid vertical={false} stroke="#e5e7eb" strokeWidth={1} />
                         <XAxis dataKey="label" tick={AXIS_STYLE} axisLine={{ stroke: "#e5e7eb" }} tickLine={false} />
-                        <YAxis tick={AXIS_STYLE} axisLine={false} tickLine={false} width={48} tickFormatter={(v) => `₹${v}`} />
+                        <YAxis tick={AXIS_STYLE} axisLine={false} tickLine={false} width={48} tickFormatter={(v) => formatCurrency(v, currencyCode)} />
                         <Tooltip
                           cursor={{ fill: "#f3f4f6" }}
-                          formatter={(value) => [currency(Number(value)), "Sales"]}
+                          formatter={(value) => [formatCurrency(Number(value), currencyCode), "Sales"]}
                           labelFormatter={(_, payload) => payload?.[0]?.payload?.date || ""}
                         />
                         <Bar dataKey="sales" fill="#2a78d6" radius={[4, 4, 0, 0]} maxBarSize={36} />
@@ -281,6 +279,8 @@ export default function DashboardPage() {
 const ORDER_TYPE_LABELS: Record<string, string> = { dine_in: "Dine in", takeaway: "Takeaway", delivery: "Delivery" };
 
 function MyActivitySection({ activity, showBills }: { activity: MyActivity; showBills: boolean }) {
+  const { user } = useAuth();
+  const currencyCode = user?.vendor?.currency;
   const { ordersCreated, billsGenerated } = activity;
   const orderTrend = ordersCreated.dailyTrend.map((d) => ({ ...d, label: formatShortDate(d.date) }));
   const billTrend = billsGenerated.dailyTrend.map((d) => ({ ...d, label: formatShortDate(d.date) }));
@@ -289,11 +289,11 @@ function MyActivitySection({ activity, showBills }: { activity: MyActivity; show
 
   const kpis = [
     { label: "Your orders today", value: String(ordersCreated.today.orders), icon: ClipboardList, tint: "bg-blue-500/10 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400" },
-    { label: "Your order value today", value: currency(ordersCreated.today.sales), icon: IndianRupee, tint: "bg-green-500/10 text-green-600 dark:bg-green-500/15 dark:text-green-400" },
+    { label: "Your order value today", value: formatCurrency(ordersCreated.today.sales, currencyCode), icon: IndianRupee, tint: "bg-green-500/10 text-green-600 dark:bg-green-500/15 dark:text-green-400" },
     ...(showBills
       ? [
           { label: "Your bills today", value: String(billsGenerated.today.orders), icon: ReceiptText, tint: "bg-purple-500/10 text-purple-600 dark:bg-purple-500/15 dark:text-purple-400" },
-          { label: "Your collections today", value: currency(billsGenerated.today.sales), icon: Wallet, tint: "bg-amber-500/10 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" },
+          { label: "Your collections today", value: formatCurrency(billsGenerated.today.sales, currencyCode), icon: Wallet, tint: "bg-amber-500/10 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" },
         ]
       : []),
   ];
@@ -353,8 +353,8 @@ function MyActivitySection({ activity, showBills }: { activity: MyActivity; show
                   <BarChart data={billTrend} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
                     <CartesianGrid vertical={false} stroke="#e5e7eb" strokeWidth={1} />
                     <XAxis dataKey="label" tick={AXIS_STYLE} axisLine={{ stroke: "#e5e7eb" }} tickLine={false} />
-                    <YAxis tick={AXIS_STYLE} axisLine={false} tickLine={false} width={48} tickFormatter={(v) => `₹${v}`} />
-                    <Tooltip cursor={{ fill: "#f3f4f6" }} formatter={(value) => [currency(Number(value)), "Sales"]} />
+                    <YAxis tick={AXIS_STYLE} axisLine={false} tickLine={false} width={48} tickFormatter={(v) => formatCurrency(v, currencyCode)} />
+                    <Tooltip cursor={{ fill: "#f3f4f6" }} formatter={(value) => [formatCurrency(Number(value), currencyCode), "Sales"]} />
                     <Bar dataKey="sales" fill="#5a3ff0" radius={[4, 4, 0, 0]} maxBarSize={36} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -401,9 +401,9 @@ function MyActivitySection({ activity, showBills }: { activity: MyActivity; show
                 margin={{ top: 4, right: 16, left: 8, bottom: 0 }}
               >
                 <CartesianGrid horizontal={false} stroke="#e5e7eb" strokeWidth={1} />
-                <XAxis type="number" tick={AXIS_STYLE} axisLine={false} tickLine={false} tickFormatter={(v) => `₹${v}`} />
+                <XAxis type="number" tick={AXIS_STYLE} axisLine={false} tickLine={false} tickFormatter={(v) => formatCurrency(v, currencyCode)} />
                 <YAxis type="category" dataKey="label" tick={AXIS_STYLE} axisLine={false} tickLine={false} width={64} />
-                <Tooltip cursor={{ fill: "#f3f4f6" }} formatter={(value) => [currency(Number(value)), "Amount"]} />
+                <Tooltip cursor={{ fill: "#f3f4f6" }} formatter={(value) => [formatCurrency(Number(value), currencyCode), "Amount"]} />
                 <Bar dataKey="amount" fill="#1baf7a" radius={[0, 4, 4, 0]} maxBarSize={24} />
               </BarChart>
             </ResponsiveContainer>

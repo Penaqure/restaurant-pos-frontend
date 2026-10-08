@@ -9,6 +9,11 @@ export type Payment = {
   amount: string;
   referenceNumber: string | null;
   status: "recorded" | "void";
+  // A refund is its own row (type: "refund", relatedPaymentId pointing at
+  // the payment it refunds) rather than a mutation of the original payment
+  // -- see paymentController.js's refundPayment for why.
+  type: "payment" | "refund";
+  relatedPaymentId: string | null;
   paidAt: string;
   notes: string | null;
   recorder: { id: string; firstName: string; lastName: string };
@@ -32,5 +37,10 @@ export async function recordPayment(payload: {
 
 export async function voidPayment(id: string) {
   const { data } = await axiosInstance.delete<{ payment: Payment; bill: Bill }>(`/payments/${id}`);
+  return data;
+}
+
+export async function refundPayment(id: string, payload: { amount?: number; notes?: string } = {}) {
+  const { data } = await axiosInstance.post<{ payment: Payment; bill: Bill }>(`/payments/${id}/refund`, payload);
   return data;
 }

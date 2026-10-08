@@ -1,4 +1,5 @@
 "use client";
+import { getCurrencySymbol } from "@/lib/currency";
 
 import { useEffect, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -143,7 +144,7 @@ export default function NewMenuItemPage() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-foreground">Base price (₹)</label>
+                <label className="text-sm font-medium text-foreground">Base price ({getCurrencySymbol(user?.vendor?.currency)})</label>
                 <Input
                   required
                   type="number"

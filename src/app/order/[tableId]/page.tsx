@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { getPublicMenu, placePublicOrder, PublicMenu, PublicOrderResult } from "@/services/publicOrderService";
 import ItemPickerModal, { CartLine } from "@/components/pos/ItemPickerModal";
+import { formatCurrency } from "@/lib/currency";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 
@@ -109,7 +110,7 @@ export default function PublicOrderPage(props: PageProps<"/order/[tableId]">) {
         </span>
         <p className="text-xl font-semibold text-foreground">Order placed!</p>
         <p className="text-sm text-muted-foreground">
-          Order {placed.orderNumber} for {placed.tableName} &middot; ₹{placed.totalAmount}
+          Order {placed.orderNumber} for {placed.tableName} &middot; {formatCurrency(placed.totalAmount, menu?.vendor.currency)}
         </p>
         <p className="max-w-xs text-sm text-muted-foreground">
           The kitchen has been notified. A staff member will bring your order out shortly.
@@ -202,7 +203,7 @@ export default function PublicOrderPage(props: PageProps<"/order/[tableId]">) {
                 </div>
                 {item.description && <p className="truncate text-xs text-muted-foreground">{item.description}</p>}
                 <p className="mt-0.5 font-mono text-xs text-muted-foreground">
-                  {item.variants.length > 0 ? "From " : ""}₹{item.basePrice}
+                  {item.variants.length > 0 ? "From " : ""}{formatCurrency(item.basePrice, menu.vendor.currency)}
                 </p>
               </div>
               <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-300">
@@ -225,7 +226,7 @@ export default function PublicOrderPage(props: PageProps<"/order/[tableId]">) {
             <ShoppingCart className="size-4" />
             {cartCount} item{cartCount === 1 ? "" : "s"}
           </span>
-          <span className="font-mono text-sm font-semibold">View cart &middot; ₹{estimatedTotal.toFixed(2)}</span>
+          <span className="font-mono text-sm font-semibold">View cart &middot; {formatCurrency(estimatedTotal, menu.vendor.currency)}</span>
         </button>
       )}
 
@@ -286,7 +287,7 @@ export default function PublicOrderPage(props: PageProps<"/order/[tableId]">) {
                         </button>
                       </div>
                       <span className="font-mono text-xs text-muted-foreground">
-                        ₹{((l.unitPrice + l.addons.reduce((s, a) => s + a.price, 0)) * l.quantity).toFixed(2)}
+                        {formatCurrency((l.unitPrice + l.addons.reduce((s, a) => s + a.price, 0)) * l.quantity, menu.vendor.currency)}
                       </span>
                     </div>
                   </li>
@@ -307,7 +308,7 @@ export default function PublicOrderPage(props: PageProps<"/order/[tableId]">) {
 
                 <div className="mt-3 flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Estimated total</span>
-                  <span className="font-mono font-medium text-foreground">₹{estimatedTotal.toFixed(2)}</span>
+                  <span className="font-mono font-medium text-foreground">{formatCurrency(estimatedTotal, menu.vendor.currency)}</span>
                 </div>
                 <p className="-mt-1 text-xs text-muted-foreground">Tax is calculated when your order is confirmed.</p>
 
@@ -320,7 +321,14 @@ export default function PublicOrderPage(props: PageProps<"/order/[tableId]">) {
         </div>
       )}
 
-      {pickerItem && <ItemPickerModal item={pickerItem} onClose={() => setPickerItem(null)} onAdd={addToCart} />}
+      {pickerItem && (
+        <ItemPickerModal
+          item={pickerItem}
+          currencyCode={menu.vendor.currency}
+          onClose={() => setPickerItem(null)}
+          onAdd={addToCart}
+        />
+      )}
     </div>
   );
 }

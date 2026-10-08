@@ -8,6 +8,8 @@ import { ImageOff, Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import VendorNav from "@/components/layout/VendorNav";
 import ItemPickerModal, { CartLine } from "@/components/pos/ItemPickerModal";
+import { useAuth } from "@/context/AuthContext";
+import { formatCurrency } from "@/lib/currency";
 import { listCategories, listItems, MenuCategory, MenuItem } from "@/services/menuService";
 
 const API_ORIGIN = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/api\/?$/, "");
@@ -29,6 +31,8 @@ export default function PosPage() {
 function PosPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user } = useAuth();
+  const currency = user?.vendor?.currency;
   // Tapping a table on the Tables page deep-links here so a waiter skips
   // straight to picking items instead of hunting for the table in a dropdown.
   const preselectedTableId = searchParams.get("tableId") || "";
@@ -165,7 +169,7 @@ function PosPageInner() {
                 </div>
                 <div className="p-2.5">
                   <p className="truncate text-sm font-medium text-foreground">{item.name}</p>
-                  <p className="font-mono text-xs text-muted-foreground">₹{item.basePrice}</p>
+                  <p className="font-mono text-xs text-muted-foreground">{formatCurrency(item.basePrice, currency)}</p>
                 </div>
               </button>
             ))}
@@ -267,7 +271,7 @@ function PosPageInner() {
                           </button>
                         </div>
                         <span className="font-mono text-xs text-muted-foreground">
-                          ₹{((l.unitPrice + l.addons.reduce((s, a) => s + a.price, 0)) * l.quantity).toFixed(2)}
+                          {formatCurrency((l.unitPrice + l.addons.reduce((s, a) => s + a.price, 0)) * l.quantity, currency)}
                         </span>
                       </div>
                     </li>
@@ -278,7 +282,7 @@ function PosPageInner() {
 
             <div className="flex items-center justify-between border-t border-border pt-3 text-sm">
               <span className="text-muted-foreground">Estimated subtotal</span>
-              <span className="font-mono font-medium text-foreground">₹{estimatedSubtotal.toFixed(2)}</span>
+              <span className="font-mono font-medium text-foreground">{formatCurrency(estimatedSubtotal, currency)}</span>
             </div>
             <p className="-mt-2 text-xs text-muted-foreground">Tax is calculated by the server when the order is placed.</p>
 
@@ -290,7 +294,7 @@ function PosPageInner() {
       </div>
 
       {pickerItem && (
-        <ItemPickerModal item={pickerItem} onClose={() => setPickerItem(null)} onAdd={addToCart} />
+        <ItemPickerModal item={pickerItem} currencyCode={currency} onClose={() => setPickerItem(null)} onAdd={addToCart} />
       )}
     </AppShell>
   );

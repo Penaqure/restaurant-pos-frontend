@@ -51,6 +51,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       className={`${fontSans.variable} ${fontMono.variable} h-full antialiased`}
+      // The no-flash script below sets data-theme on this exact element
+      // before React hydrates (see its comment) -- this element's JSX never
+      // sets that attribute itself, so the live DOM and React's own render
+      // output always "disagree" on it by design. suppressHydrationWarning
+      // tells React that's expected for this element rather than a real
+      // bug, without affecting any other mismatch checks.
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-surface text-foreground font-sans">
         <Script id="theme-no-flash" strategy="beforeInteractive">

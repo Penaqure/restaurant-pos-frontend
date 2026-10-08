@@ -1,4 +1,5 @@
 "use client";
+import { formatCurrency, getCurrencySymbol } from "@/lib/currency";
 
 import { useEffect, useMemo, useState, FormEvent } from "react";
 import { toast } from "react-toastify";
@@ -211,9 +212,9 @@ export default function DiscountsPage() {
                       <tr key={d.id} className={`border-t border-border ${editingId === d.id ? "bg-brand-50/50 dark:bg-brand-500/10" : ""}`}>
                         <td className="px-5 py-3 font-medium text-foreground">{d.code}</td>
                         <td className="px-5 py-3 text-muted-foreground">
-                          {d.type === "percentage" ? `${d.value}%` : `₹${d.value}`}
+                          {d.type === "percentage" ? `${d.value}%` : formatCurrency(d.value, user?.vendor?.currency)}
                         </td>
-                        <td className="px-5 py-3 text-muted-foreground">₹{d.minOrderAmount}</td>
+                        <td className="px-5 py-3 text-muted-foreground">{formatCurrency(d.minOrderAmount, user?.vendor?.currency)}</td>
                         <td className="px-5 py-3 text-muted-foreground">
                           {d.usageCount}
                           {d.usageLimit ? ` / ${d.usageLimit}` : ""}
@@ -279,7 +280,7 @@ export default function DiscountsPage() {
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-foreground">
-                    Value {type === "percentage" ? "(%)" : "(₹)"}
+                    Value {type === "percentage" ? "(%)" : `(${getCurrencySymbol(user?.vendor?.currency)})`}
                   </label>
                   <Input
                     required
@@ -291,7 +292,7 @@ export default function DiscountsPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-foreground">Minimum order amount (₹)</label>
+                  <label className="text-sm font-medium text-foreground">Minimum order amount ({getCurrencySymbol(user?.vendor?.currency)})</label>
                   <Input
                     type="number"
                     min="0"

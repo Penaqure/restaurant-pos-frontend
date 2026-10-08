@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { ImageOff, Minus, Plus, X } from "lucide-react";
 import { MenuItem } from "@/services/menuService";
+import { formatCurrency } from "@/lib/currency";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 
@@ -24,10 +25,17 @@ export type CartLine = {
 
 export default function ItemPickerModal({
   item,
+  currencyCode,
   onClose,
   onAdd,
 }: {
   item: MenuItem;
+  // Passed explicitly rather than read from useAuth() here, since this
+  // modal is shared between the authenticated dashboard (POS, add-items)
+  // and the anonymous public QR-ordering page, which has no session to
+  // read a vendor currency from -- only the vendor object its own public
+  // menu fetch returned.
+  currencyCode?: string;
   onClose: () => void;
   onAdd: (line: CartLine) => void;
 }) {
@@ -86,7 +94,7 @@ export default function ItemPickerModal({
                 />
                 <h3 className="text-base font-semibold text-foreground">{item.name}</h3>
               </div>
-              <p className="font-mono text-xs text-muted-foreground">₹{item.basePrice}</p>
+              <p className="font-mono text-xs text-muted-foreground">{formatCurrency(item.basePrice, currencyCode)}</p>
             </div>
           </div>
           <button
@@ -112,7 +120,7 @@ export default function ItemPickerModal({
                   />
                   {v.name}
                 </span>
-                <span className="font-mono">₹{v.price}</span>
+                <span className="font-mono">{formatCurrency(v.price, currencyCode)}</span>
               </label>
             ))}
           </div>
@@ -132,7 +140,7 @@ export default function ItemPickerModal({
                   />
                   {a.name}
                 </span>
-                <span className="font-mono">+₹{a.price}</span>
+                <span className="font-mono">+{formatCurrency(a.price, currencyCode)}</span>
               </label>
             ))}
           </div>
@@ -168,7 +176,7 @@ export default function ItemPickerModal({
           <button onClick={onClose} className="text-sm text-muted-foreground hover:underline">
             Cancel
           </button>
-          <Button onClick={handleAdd}>Add · ₹{lineTotal.toFixed(2)}</Button>
+          <Button onClick={handleAdd}>Add · {formatCurrency(lineTotal, currencyCode)}</Button>
         </div>
       </div>
     </div>

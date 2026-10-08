@@ -7,6 +7,8 @@ import { ImageOff, Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
 import { listCategories, listItems, MenuCategory, MenuItem } from "@/services/menuService";
 import { addOrderItems } from "@/services/orderService";
 import ItemPickerModal, { CartLine } from "@/components/pos/ItemPickerModal";
+import { useAuth } from "@/context/AuthContext";
+import { formatCurrency } from "@/lib/currency";
 import Button from "@/components/ui/Button";
 
 const API_ORIGIN = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/api\/?$/, "");
@@ -20,6 +22,8 @@ export default function AddItemsModal({
   onClose: () => void;
   onAdded: () => void;
 }) {
+  const { user } = useAuth();
+  const currency = user?.vendor?.currency;
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [items, setItems] = useState<MenuItem[]>([]);
   const [activeCategory, setActiveCategory] = useState<string | "all">("all");
@@ -152,7 +156,7 @@ export default function AddItemsModal({
                   </div>
                   <div className="p-2.5">
                     <p className="truncate text-sm font-medium text-foreground">{item.name}</p>
-                    <p className="font-mono text-xs text-muted-foreground">₹{item.basePrice}</p>
+                    <p className="font-mono text-xs text-muted-foreground">{formatCurrency(item.basePrice, currency)}</p>
                   </div>
                 </button>
               ))}
@@ -204,7 +208,7 @@ export default function AddItemsModal({
                           </button>
                         </div>
                         <span className="font-mono text-xs text-muted-foreground">
-                          ₹{((l.unitPrice + l.addons.reduce((s, a) => s + a.price, 0)) * l.quantity).toFixed(2)}
+                          {formatCurrency((l.unitPrice + l.addons.reduce((s, a) => s + a.price, 0)) * l.quantity, currency)}
                         </span>
                       </div>
                     </li>
@@ -215,7 +219,7 @@ export default function AddItemsModal({
 
             <div className="mt-3 flex items-center justify-between border-t border-border pt-3 text-sm">
               <span className="text-muted-foreground">Estimated subtotal</span>
-              <span className="font-mono font-medium text-foreground">₹{estimatedTotal.toFixed(2)}</span>
+              <span className="font-mono font-medium text-foreground">{formatCurrency(estimatedTotal, currency)}</span>
             </div>
             <Button onClick={handleSubmit} loading={submitting} disabled={cart.length === 0} className="mt-3 w-full">
               {submitting ? "Adding..." : "Add to order"}
@@ -224,7 +228,9 @@ export default function AddItemsModal({
         </div>
       </div>
 
-      {pickerItem && <ItemPickerModal item={pickerItem} onClose={() => setPickerItem(null)} onAdd={addToCart} />}
+      {pickerItem && (
+        <ItemPickerModal item={pickerItem} currencyCode={currency} onClose={() => setPickerItem(null)} onAdd={addToCart} />
+      )}
     </div>
   );
 }

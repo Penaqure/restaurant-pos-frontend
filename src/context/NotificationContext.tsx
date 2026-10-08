@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useRef, useState, ReactNode } fro
 import { io, Socket } from "socket.io-client";
 import { toast } from "react-toastify";
 import { useAuth } from "@/context/AuthContext";
+import { formatCurrency } from "@/lib/currency";
 
 const SOCKET_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/api\/?$/, "");
 const MAX_NOTIFICATIONS = 50;
@@ -105,7 +106,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         {
           type: "order:placed",
           title: "New order placed",
-          message: `${payload.orderNumber}${payload.table ? ` — ${payload.table.name}` : ""} · ₹${payload.totalAmount}`,
+          message: `${payload.orderNumber}${payload.table ? ` — ${payload.table.name}` : ""} · ${formatCurrency(payload.totalAmount, user?.vendor?.currency)}`,
           link: `/dashboard/orders/${payload.id}`,
         },
         payload.actorUserId
@@ -129,7 +130,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         {
           type: "payment:received",
           title: "Payment received",
-          message: `₹${payload.amount} (${payload.method}) on ${payload.billNumber}`,
+          message: `${formatCurrency(payload.amount, user?.vendor?.currency)} (${payload.method}) on ${payload.billNumber}`,
           link: `/dashboard/bills/${payload.billId}`,
         },
         payload.actorUserId

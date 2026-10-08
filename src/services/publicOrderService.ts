@@ -8,7 +8,7 @@ import type { MenuCategory, MenuItem } from "@/services/menuService";
 const publicClient = axios.create({ baseURL: process.env.NEXT_PUBLIC_API_BASE_URL });
 
 export type PublicMenu = {
-  vendor: { name: string; logoUrl: string | null; brandColor: string };
+  vendor: { name: string; logoUrl: string | null; brandColor: string; currency: string };
   branch: { id: string; name: string };
   table: { id: string; name: string; status: string };
   categories: MenuCategory[];

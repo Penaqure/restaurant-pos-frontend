@@ -14,6 +14,7 @@ export type CurrentUser = {
     slug: string;
     logoUrl: string | null;
     brandColor: string;
+    currency: string;
     defaultBillSize: string;
     planLimits: { maxUsers: number; maxBranches: number } | null;
     branchCount: number;

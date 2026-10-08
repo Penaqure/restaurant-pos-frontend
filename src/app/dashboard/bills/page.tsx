@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Eye, Loader2, Receipt } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
+import { useAuth } from "@/context/AuthContext";
+import { formatCurrency } from "@/lib/currency";
 import VendorNav from "@/components/layout/VendorNav";
 import { listBills, Bill } from "@/services/billService";
 import { isWithinDateRange } from "@/lib/dateRange";
@@ -32,6 +34,8 @@ type SortOption = (typeof SORT_OPTIONS)[number]["value"];
 const PAGE_SIZE = 10;
 
 export default function BillsPage() {
+  const { user } = useAuth();
+  const currencyCode = user?.vendor?.currency;
   const [bills, setBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -171,7 +175,7 @@ export default function BillsPage() {
                         </Link>
                       </td>
                       <td className="px-5 py-3 text-muted-foreground">{b.order.orderNumber}</td>
-                      <td className="px-5 py-3 font-mono text-muted-foreground">₹{b.totalAmount}</td>
+                      <td className="px-5 py-3 font-mono text-muted-foreground">{formatCurrency(b.totalAmount, currencyCode)}</td>
                       <td className="px-5 py-3">
                         <span
                           className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${PAYMENT_STYLES[b.paymentStatus]}`}

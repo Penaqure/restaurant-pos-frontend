@@ -1,4 +1,5 @@
 "use client";
+import { formatCurrency } from "@/lib/currency";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -206,7 +207,7 @@ export default function MenuItemsPage() {
                 <p className="truncate text-sm font-medium text-foreground">{item.name}</p>
                 <p className="truncate text-xs text-muted-foreground">{item.category?.name}</p>
                 <div className="mt-1 flex items-center justify-between">
-                  <span className="font-mono text-xs text-foreground">₹{item.basePrice}</span>
+                  <span className="font-mono text-xs text-foreground">{formatCurrency(item.basePrice, user?.vendor?.currency)}</span>
                   {(item.variants.length > 0 || item.addons.length > 0) && (
                     <Badge tone="neutral" className="text-[10px]">
                       {item.variants.length + item.addons.length}

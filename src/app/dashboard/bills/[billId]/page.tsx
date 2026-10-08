@@ -6,12 +6,14 @@ import { FileText, Loader2, Printer } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import VendorNav from "@/components/layout/VendorNav";
 import { useAuth } from "@/context/AuthContext";
+import { formatCurrency } from "@/lib/currency";
 import { getBill, openBillPdf, Bill, BillPdfSize, BILL_PDF_SIZES } from "@/services/billService";
-import { listPayments, recordPayment, voidPayment, Payment, PaymentMethod } from "@/services/paymentService";
+import { listPayments, recordPayment, voidPayment, refundPayment, Payment, PaymentMethod } from "@/services/paymentService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
+import RefundDialog from "@/components/payments/RefundDialog";
 
 const PAYMENT_STATUS_STYLES: Record<Bill["paymentStatus"], string> = {
   unpaid: "bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-300",
@@ -22,23 +24,26 @@ const PAYMENT_STATUS_STYLES: Record<Bill["paymentStatus"], string> = {
 
 // India's GST is conventionally shown split into CGST + SGST (each half the
 // combined rate); everywhere else just gets a plain tax line at the full rate.
-function taxDisplayRows(bill: Bill) {
+function taxDisplayRows(bill: Bill, currencyCode?: string) {
   return bill.taxBreakdown.flatMap((t, i) => {
     if (bill.vendor.country === "IN") {
       const halfRate = t.ratePercent / 2;
       const halfTax = t.taxAmount / 2;
       return [
-        { key: `${i}-cgst`, label: `CGST ${halfRate}% on ₹${t.taxableAmount}`, amount: halfTax },
-        { key: `${i}-sgst`, label: `SGST ${halfRate}% on ₹${t.taxableAmount}`, amount: halfTax },
+        { key: `${i}-cgst`, label: `CGST ${halfRate}% on ${formatCurrency(t.taxableAmount, currencyCode)}`, amount: halfTax },
+        { key: `${i}-sgst`, label: `SGST ${halfRate}% on ${formatCurrency(t.taxableAmount, currencyCode)}`, amount: halfTax },
       ];
     }
-    return [{ key: `${i}-tax`, label: `Tax ${t.ratePercent}% on ₹${t.taxableAmount}`, amount: t.taxAmount }];
+    return [
+      { key: `${i}-tax`, label: `Tax ${t.ratePercent}% on ${formatCurrency(t.taxableAmount, currencyCode)}`, amount: t.taxAmount },
+    ];
   });
 }
 
 export default function BillDetailPage(props: PageProps<"/dashboard/bills/[billId]">) {
   const { billId } = use(props.params);
   const { user } = useAuth();
+  const currencyCode = user?.vendor?.currency;
   const [bill, setBill] = useState<Bill | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,6 +54,8 @@ export default function BillDetailPage(props: PageProps<"/dashboard/bills/[billI
   const [cashReceived, setCashReceived] = useState("");
   const [referenceNumber, setReferenceNumber] = useState("");
   const [recording, setRecording] = useState(false);
+  const [refundTarget, setRefundTarget] = useState<Payment | null>(null);
+  const [refunding, setRefunding] = useState(false);
 
   useEffect(() => {
     if (pdfSize === null && user?.vendor?.defaultBillSize) {
@@ -107,6 +114,33 @@ export default function BillDetailPage(props: PageProps<"/dashboard/bills/[billI
     }
   }
 
+  // Mirrors the backend's cap in paymentController.refundPayment -- what's
+  // actually refundable is the payment's amount minus any refunds already
+  // recorded against it, not the payment's full amount every time.
+  function refundableAmount(payment: Payment) {
+    const alreadyRefunded = payments
+      .filter((p) => p.type === "refund" && p.relatedPaymentId === payment.id && p.status === "recorded")
+      .reduce((sum, p) => sum + Number(p.amount), 0);
+    return Math.max(0, Number(payment.amount) - alreadyRefunded);
+  }
+
+  async function handleRefund(amount: number, notes: string) {
+    if (!refundTarget) return;
+    setRefunding(true);
+    try {
+      await refundPayment(refundTarget.id, { amount, notes: notes || undefined });
+      toast.success("Refund recorded");
+      setRefundTarget(null);
+      await refresh();
+    } catch (err) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Could not record refund";
+      toast.error(message);
+    } finally {
+      setRefunding(false);
+    }
+  }
+
   async function handleOpenPdf() {
     setOpening(true);
     try {
@@ -148,7 +182,7 @@ export default function BillDetailPage(props: PageProps<"/dashboard/bills/[billI
                       {item.quantity}× {item.itemNameSnapshot}
                       {item.variantNameSnapshot && ` (${item.variantNameSnapshot})`}
                     </span>
-                    <span className="font-mono text-foreground">₹{item.lineTotal}</span>
+                    <span className="font-mono text-foreground">{formatCurrency(item.lineTotal, currencyCode)}</span>
                   </div>
                   {item.addons.length > 0 && (
                     <p className="text-xs text-muted-foreground">
@@ -162,37 +196,37 @@ export default function BillDetailPage(props: PageProps<"/dashboard/bills/[billI
             <div className="mt-3 space-y-1 border-t border-border pt-3 text-sm">
               <div className="flex justify-between text-muted-foreground">
                 <span>Subtotal</span>
-                <span className="font-mono">₹{bill.subtotal}</span>
+                <span className="font-mono">{formatCurrency(bill.subtotal, currencyCode)}</span>
               </div>
               {Number(bill.discountAmount) > 0 && (
                 <div className="flex justify-between text-muted-foreground">
                   <span>Discount {bill.discount && `(${bill.discount.code})`}</span>
-                  <span className="font-mono">-₹{bill.discountAmount}</span>
+                  <span className="font-mono">-{formatCurrency(bill.discountAmount, currencyCode)}</span>
                 </div>
               )}
-              {taxDisplayRows(bill).map((row) => (
+              {taxDisplayRows(bill, currencyCode).map((row) => (
                 <div key={row.key} className="flex justify-between text-muted-foreground">
                   <span>{row.label}</span>
-                  <span className="font-mono">₹{row.amount.toFixed(2)}</span>
+                  <span className="font-mono">{formatCurrency(row.amount, currencyCode)}</span>
                 </div>
               ))}
               {Number(bill.roundOffAmount) !== 0 && (
                 <div className="flex justify-between text-muted-foreground">
                   <span>Round off</span>
-                  <span className="font-mono">₹{bill.roundOffAmount}</span>
+                  <span className="font-mono">{formatCurrency(bill.roundOffAmount, currencyCode)}</span>
                 </div>
               )}
               <div className="flex justify-between border-t border-border pt-1 font-semibold text-foreground">
                 <span>Total</span>
-                <span className="font-mono">₹{bill.totalAmount}</span>
+                <span className="font-mono">{formatCurrency(bill.totalAmount, currencyCode)}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
                 <span>Paid</span>
-                <span className="font-mono">₹{bill.amountPaid}</span>
+                <span className="font-mono">{formatCurrency(bill.amountPaid, currencyCode)}</span>
               </div>
               <div className="flex justify-between font-semibold text-foreground">
                 <span>Balance due</span>
-                <span className="font-mono">₹{bill.balanceDue}</span>
+                <span className="font-mono">{formatCurrency(bill.balanceDue, currencyCode)}</span>
               </div>
             </div>
           </CardContent>
@@ -246,19 +280,34 @@ export default function BillDetailPage(props: PageProps<"/dashboard/bills/[billI
                       className={`flex items-center justify-between py-2 text-sm ${p.status === "void" ? "opacity-40" : ""}`}
                     >
                       <span className="text-foreground">
+                        {p.type === "refund" && <span className="text-danger">Refund · </span>}
                         <span className="capitalize">{p.method}</span>
                         {p.referenceNumber && <span className="text-muted-foreground"> · {p.referenceNumber}</span>}
+                        {p.notes && <span className="text-muted-foreground"> · {p.notes}</span>}
                         {p.status === "void" && <span className="text-muted-foreground"> (voided)</span>}
                       </span>
                       <span className="flex items-center gap-3 font-mono">
-                        ₹{p.amount}
-                        {p.status === "recorded" && (
-                          <button
-                            onClick={() => handleVoid(p.id)}
-                            className="rounded px-1.5 py-0.5 font-sans text-xs text-danger hover:bg-danger/10"
-                          >
-                            Void
-                          </button>
+                        <span className={p.type === "refund" ? "text-danger" : undefined}>
+                          {p.type === "refund" ? "-" : ""}
+                          {formatCurrency(p.amount, currencyCode)}
+                        </span>
+                        {p.status === "recorded" && p.type === "payment" && (
+                          <span className="flex gap-1">
+                            {refundableAmount(p) > 0 && (
+                              <button
+                                onClick={() => setRefundTarget(p)}
+                                className="rounded px-1.5 py-0.5 font-sans text-xs text-danger hover:bg-danger/10"
+                              >
+                                Refund
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleVoid(p.id)}
+                              className="rounded px-1.5 py-0.5 font-sans text-xs text-danger hover:bg-danger/10"
+                            >
+                              Void
+                            </button>
+                          </span>
                         )}
                       </span>
                     </li>
@@ -320,7 +369,7 @@ export default function BillDetailPage(props: PageProps<"/dashboard/bills/[billI
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Change to return</span>
                         <span className="font-mono font-semibold text-foreground">
-                          ₹{Math.max(0, Number(cashReceived || 0) - Number(amount || 0)).toFixed(2)}
+                          {formatCurrency(Math.max(0, Number(cashReceived || 0) - Number(amount || 0)), currencyCode)}
                         </span>
                       </div>
                       {cashReceived !== "" && Number(cashReceived) < Number(amount || 0) && (
@@ -338,6 +387,16 @@ export default function BillDetailPage(props: PageProps<"/dashboard/bills/[billI
           </Card>
         </div>
       </div>
+
+      {refundTarget && (
+        <RefundDialog
+          maxAmount={refundableAmount(refundTarget)}
+          currencyCode={currencyCode}
+          loading={refunding}
+          onConfirm={handleRefund}
+          onCancel={() => setRefundTarget(null)}
+        />
+      )}
     </AppShell>
   );
 }

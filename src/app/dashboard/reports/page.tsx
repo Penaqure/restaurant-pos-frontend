@@ -30,6 +30,8 @@ import {
 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import VendorNav from "@/components/layout/VendorNav";
+import { useAuth } from "@/context/AuthContext";
+import { formatCurrency } from "@/lib/currency";
 import { getAnalytics, Analytics } from "@/services/reportService";
 import { buildAnalyticsCsv, downloadCsv } from "@/lib/exportCsv";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -69,10 +71,6 @@ function formatHour(h: number) {
   const period = h < 12 ? "am" : "pm";
   const hour12 = h % 12 === 0 ? 12 : h % 12;
   return `${hour12}${period}`;
-}
-
-function currency(n: number) {
-  return `₹${n.toFixed(2)}`;
 }
 
 function initialsOf(name: string) {
@@ -147,6 +145,8 @@ export default function ReportsPage() {
 }
 
 function ReportsBody({ analytics }: { analytics: Analytics }) {
+  const { user } = useAuth();
+  const currencyCode = user?.vendor?.currency;
   const {
     overview,
     dailySales,
@@ -172,11 +172,11 @@ function ReportsBody({ analytics }: { analytics: Analytics }) {
   const cancelledRate = overview.totalOrdersPlaced > 0 ? (overview.cancelledOrders / overview.totalOrdersPlaced) * 100 : 0;
 
   const kpis = [
-    { label: "Total sales", value: currency(overview.sales), icon: IndianRupee, tint: "bg-green-50 text-green-600 dark:bg-green-500/15 dark:text-green-400" },
+    { label: "Total sales", value: formatCurrency(overview.sales, currencyCode), icon: IndianRupee, tint: "bg-green-50 text-green-600 dark:bg-green-500/15 dark:text-green-400" },
     { label: "Bills generated", value: String(overview.orders), icon: ReceiptText, tint: "bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400" },
-    { label: "Avg order value", value: currency(overview.avgOrderValue), icon: TrendingUp, tint: "bg-purple-50 text-purple-600 dark:bg-purple-500/15 dark:text-purple-400" },
-    { label: "Tax collected", value: currency(overview.taxCollected), icon: Landmark, tint: "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" },
-    { label: "Discount given", value: currency(overview.discountGiven), icon: Tag, tint: "bg-pink-50 text-pink-600 dark:bg-pink-500/15 dark:text-pink-400" },
+    { label: "Avg order value", value: formatCurrency(overview.avgOrderValue, currencyCode), icon: TrendingUp, tint: "bg-purple-50 text-purple-600 dark:bg-purple-500/15 dark:text-purple-400" },
+    { label: "Tax collected", value: formatCurrency(overview.taxCollected, currencyCode), icon: Landmark, tint: "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" },
+    { label: "Discount given", value: formatCurrency(overview.discountGiven, currencyCode), icon: Tag, tint: "bg-pink-50 text-pink-600 dark:bg-pink-500/15 dark:text-pink-400" },
     {
       label: "Cancelled orders",
       value: `${overview.cancelledOrders} (${cancelledRate.toFixed(1)}%)`,
@@ -213,11 +213,11 @@ function ReportsBody({ analytics }: { analytics: Analytics }) {
               <BarChart data={dailyChartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
                 <CartesianGrid vertical={false} stroke="#e5e7eb" strokeWidth={1} />
                 <XAxis dataKey="label" tick={AXIS_STYLE} axisLine={{ stroke: "#e5e7eb" }} tickLine={false} />
-                <YAxis tick={AXIS_STYLE} axisLine={false} tickLine={false} width={48} tickFormatter={(v) => `₹${v}`} />
+                <YAxis tick={AXIS_STYLE} axisLine={false} tickLine={false} width={48} tickFormatter={(v) => formatCurrency(v, currencyCode)} />
                 <Tooltip
                   cursor={{ fill: "#f3f4f6" }}
                   formatter={(value, name) => [
-                    name === "sales" ? currency(Number(value)) : value,
+                    name === "sales" ? formatCurrency(Number(value), currencyCode) : value,
                     name === "sales" ? "Sales" : "Orders",
                   ]}
                   labelFormatter={(_, payload) => payload?.[0]?.payload?.date || ""}
@@ -243,8 +243,8 @@ function ReportsBody({ analytics }: { analytics: Analytics }) {
                 >
                   <CartesianGrid vertical={false} stroke="#e5e7eb" strokeWidth={1} />
                   <XAxis dataKey="label" tick={AXIS_STYLE} axisLine={{ stroke: "#e5e7eb" }} tickLine={false} />
-                  <YAxis tick={AXIS_STYLE} axisLine={false} tickLine={false} width={48} tickFormatter={(v) => `₹${v}`} />
-                  <Tooltip cursor={{ fill: "#f3f4f6" }} formatter={(value) => [currency(Number(value)), "Amount"]} />
+                  <YAxis tick={AXIS_STYLE} axisLine={false} tickLine={false} width={48} tickFormatter={(v) => formatCurrency(v, currencyCode)} />
+                  <Tooltip cursor={{ fill: "#f3f4f6" }} formatter={(value) => [formatCurrency(Number(value), currencyCode), "Amount"]} />
                   <Bar dataKey="amount" radius={[4, 4, 0, 0]} maxBarSize={40}>
                     {paymentMethods.map((m) => (
                       <Cell key={m.method} fill={METHOD_COLORS[m.method] || "#6b7280"} />
@@ -276,7 +276,7 @@ function ReportsBody({ analytics }: { analytics: Analytics }) {
                   margin={{ top: 4, right: 16, left: 8, bottom: 0 }}
                 >
                   <CartesianGrid horizontal={false} stroke="#e5e7eb" strokeWidth={1} />
-                  <XAxis type="number" tick={AXIS_STYLE} axisLine={false} tickLine={false} tickFormatter={(v) => `₹${v}`} />
+                  <XAxis type="number" tick={AXIS_STYLE} axisLine={false} tickLine={false} tickFormatter={(v) => formatCurrency(v, currencyCode)} />
                   <YAxis
                     type="category"
                     dataKey="label"
@@ -286,7 +286,7 @@ function ReportsBody({ analytics }: { analytics: Analytics }) {
                     width={64}
                     className="capitalize"
                   />
-                  <Tooltip cursor={{ fill: "#f3f4f6" }} formatter={(value) => [currency(Number(value)), "Sales"]} />
+                  <Tooltip cursor={{ fill: "#f3f4f6" }} formatter={(value) => [formatCurrency(Number(value), currencyCode), "Sales"]} />
                   <Bar dataKey="sales" radius={[0, 4, 4, 0]} maxBarSize={28}>
                     {orderTypes.map((t) => (
                       <Cell key={t.type} fill={ORDER_TYPE_COLORS[t.type] || "#6b7280"} />
@@ -353,7 +353,7 @@ function ReportsBody({ analytics }: { analytics: Analytics }) {
                       <tr key={item.menuItemId} className="border-t border-border">
                         <td className="px-5 py-3 font-medium text-foreground">{item.name}</td>
                         <td className="px-5 py-3 text-muted-foreground">{item.quantity}</td>
-                        <td className="px-5 py-3 font-mono text-muted-foreground">{currency(item.revenue)}</td>
+                        <td className="px-5 py-3 font-mono text-muted-foreground">{formatCurrency(item.revenue, currencyCode)}</td>
                         <td className="px-5 py-3 text-right">
                           <Link href={`/dashboard/menu/items/${item.menuItemId}`}>
                             <Button variant="ghost" size="sm" className="whitespace-nowrap">
@@ -387,9 +387,9 @@ function ReportsBody({ analytics }: { analytics: Analytics }) {
                     margin={{ top: 4, right: 16, left: 8, bottom: 0 }}
                   >
                     <CartesianGrid horizontal={false} stroke="#e5e7eb" strokeWidth={1} />
-                    <XAxis type="number" tick={AXIS_STYLE} axisLine={false} tickLine={false} tickFormatter={(v) => `₹${v}`} />
+                    <XAxis type="number" tick={AXIS_STYLE} axisLine={false} tickLine={false} tickFormatter={(v) => formatCurrency(v, currencyCode)} />
                     <YAxis type="category" dataKey="name" tick={AXIS_STYLE} axisLine={false} tickLine={false} width={88} />
-                    <Tooltip cursor={{ fill: "#f3f4f6" }} formatter={(value) => [currency(Number(value)), "Revenue"]} />
+                    <Tooltip cursor={{ fill: "#f3f4f6" }} formatter={(value) => [formatCurrency(Number(value), currencyCode), "Revenue"]} />
                     <Bar dataKey="revenue" fill="#2a78d6" radius={[0, 4, 4, 0]} maxBarSize={22} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -433,7 +433,7 @@ function ReportsBody({ analytics }: { analytics: Analytics }) {
                           </span>
                         </td>
                         <td className="px-5 py-3 text-muted-foreground">{b.orders}</td>
-                        <td className="px-5 py-3 font-mono text-muted-foreground">{currency(b.sales)}</td>
+                        <td className="px-5 py-3 font-mono text-muted-foreground">{formatCurrency(b.sales, currencyCode)}</td>
                         <td className="px-5 py-3">
                           <div className="flex items-center gap-2">
                             <div className="h-1.5 w-20 overflow-hidden rounded-full bg-foreground/5">
@@ -485,7 +485,7 @@ function ReportsBody({ analytics }: { analytics: Analytics }) {
                           </span>
                         </td>
                         <td className="px-5 py-3 text-muted-foreground">{d.timesUsed}</td>
-                        <td className="px-5 py-3 font-mono text-muted-foreground">{currency(d.totalDiscount)}</td>
+                        <td className="px-5 py-3 font-mono text-muted-foreground">{formatCurrency(d.totalDiscount, currencyCode)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -527,7 +527,7 @@ function ReportsBody({ analytics }: { analytics: Analytics }) {
                           </span>
                         </td>
                         <td className="px-5 py-3 text-muted-foreground">{s.orders}</td>
-                        <td className="px-5 py-3 font-mono text-muted-foreground">{currency(s.sales)}</td>
+                        <td className="px-5 py-3 font-mono text-muted-foreground">{formatCurrency(s.sales, currencyCode)}</td>
                       </tr>
                     ))}
                   </tbody>

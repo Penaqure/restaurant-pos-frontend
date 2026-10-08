@@ -1,4 +1,5 @@
 "use client";
+import { formatCurrency, getCurrencySymbol } from "@/lib/currency";
 
 import { use, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -278,7 +279,7 @@ export default function MenuItemDetailPage(props: PageProps<"/dashboard/menu/ite
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-foreground">Base price (₹)</label>
+                  <label className="text-sm font-medium text-foreground">Base price ({getCurrencySymbol(user?.vendor?.currency)})</label>
                   <Input
                     required
                     type="number"
@@ -322,7 +323,7 @@ export default function MenuItemDetailPage(props: PageProps<"/dashboard/menu/ite
                       {v.name} {v.isDefault && <span className="text-xs text-muted-foreground">(default)</span>}
                     </span>
                     <span className="flex items-center gap-3 font-mono">
-                      ₹{v.price}
+                      {formatCurrency(v.price, user?.vendor?.currency)}
                       <span className="flex gap-1 font-sans">
                         <button
                           onClick={() => startEditVariant(v)}
@@ -395,7 +396,7 @@ export default function MenuItemDetailPage(props: PageProps<"/dashboard/menu/ite
                   <li key={a.id} className="flex items-center justify-between py-2 text-sm">
                     <span className="text-foreground">{a.name}</span>
                     <span className="flex items-center gap-3 font-mono">
-                      ₹{a.price}
+                      {formatCurrency(a.price, user?.vendor?.currency)}
                       <span className="flex gap-1 font-sans">
                         <button
                           onClick={() => startEditAddon(a)}

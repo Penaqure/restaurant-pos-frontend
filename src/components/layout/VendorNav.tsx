@@ -16,6 +16,7 @@ import {
   Users,
   Building2,
   Settings,
+  History,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -57,6 +58,7 @@ const sections: { label: string; links: { href: string; label: string; icon: typ
     links: [
       { href: "/dashboard/staff", label: "Staff", icon: Users, roles: ["owner", "manager"] },
       { href: "/dashboard/branches", label: "Branches", icon: Building2, roles: ["owner"] },
+      { href: "/dashboard/audit-log", label: "Audit log", icon: History, roles: ["owner"] },
       { href: "/dashboard/settings", label: "Settings", icon: Settings, roles: ["owner"] },
     ],
   },

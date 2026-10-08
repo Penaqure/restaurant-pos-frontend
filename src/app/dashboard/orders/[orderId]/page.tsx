@@ -1,4 +1,5 @@
 "use client";
+import { formatCurrency } from "@/lib/currency";
 
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -234,7 +235,7 @@ export default function OrderDetailPage(props: PageProps<"/dashboard/orders/[ord
                       {item.quantity}× {item.itemNameSnapshot}
                       {item.variantNameSnapshot && ` (${item.variantNameSnapshot})`}
                     </span>
-                    <span className="font-mono text-foreground">₹{item.lineTotal}</span>
+                    <span className="font-mono text-foreground">{formatCurrency(item.lineTotal, user?.vendor?.currency)}</span>
                   </div>
                   {item.addons.length > 0 && (
                     <p className="text-xs text-muted-foreground">
@@ -249,15 +250,15 @@ export default function OrderDetailPage(props: PageProps<"/dashboard/orders/[ord
             <div className="mt-3 space-y-1 border-t border-border pt-3 text-sm">
               <div className="flex justify-between text-muted-foreground">
                 <span>Subtotal</span>
-                <span className="font-mono">₹{order.subtotal}</span>
+                <span className="font-mono">{formatCurrency(order.subtotal, user?.vendor?.currency)}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
                 <span>Tax</span>
-                <span className="font-mono">₹{order.taxAmount}</span>
+                <span className="font-mono">{formatCurrency(order.taxAmount, user?.vendor?.currency)}</span>
               </div>
               <div className="flex justify-between font-semibold text-foreground">
                 <span>Total</span>
-                <span className="font-mono">₹{order.totalAmount}</span>
+                <span className="font-mono">{formatCurrency(order.totalAmount, user?.vendor?.currency)}</span>
               </div>
             </div>
           </CardContent>

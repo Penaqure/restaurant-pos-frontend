@@ -5,6 +5,8 @@ import Link from "next/link";
 import { toast } from "react-toastify";
 import { Ban, ClipboardList, Eye, Loader2, QrCode } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
+import { useAuth } from "@/context/AuthContext";
+import { formatCurrency } from "@/lib/currency";
 import VendorNav from "@/components/layout/VendorNav";
 import { listOrders, updateOrderStatus, Order, OrderStatus, OrderType } from "@/services/orderService";
 import { isWithinDateRange } from "@/lib/dateRange";
@@ -40,6 +42,8 @@ type SortOption = (typeof SORT_OPTIONS)[number]["value"];
 const PAGE_SIZE = 10;
 
 export default function OrdersPage() {
+  const { user } = useAuth();
+  const currencyCode = user?.vendor?.currency;
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -222,7 +226,7 @@ export default function OrdersPage() {
                       </td>
                       <td className="px-5 py-3 capitalize text-muted-foreground">{o.orderType.replace("_", " ")}</td>
                       <td className="px-5 py-3 text-muted-foreground">{o.table?.name || "—"}</td>
-                      <td className="px-5 py-3 font-mono text-muted-foreground">₹{o.totalAmount}</td>
+                      <td className="px-5 py-3 font-mono text-muted-foreground">{formatCurrency(o.totalAmount, currencyCode)}</td>
                       <td className="px-5 py-3">
                         <span
                           className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${STATUS_STYLES[o.status]}`}
