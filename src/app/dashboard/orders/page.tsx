@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { toast } from "react-toastify";
-import { Ban, ClipboardList, Eye, Loader2, QrCode } from "lucide-react";
+import { Ban, ClipboardList, Eye, LayoutGrid, Loader2, QrCode, Table2 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import { useAuth } from "@/context/AuthContext";
 import { formatCurrency } from "@/lib/currency";
@@ -27,9 +27,39 @@ const STATUS_STYLES: Record<string, string> = {
   cancelled: "bg-foreground/5 text-muted-foreground",
 };
 
+// A solid left-border accent per status on order cards -- same color
+// family as STATUS_STYLES' badges, but a strip rather than a full card
+// tint. Card bodies carry a lot of text (item lists, prices), and a full
+// colored background behind all of that hurts readability, especially in
+// dark mode; a thin accent gives the same at-a-glance signal without it.
+// Solid mid-saturation shades read fine on both a light and dark card
+// background, so no separate dark: variant is needed here.
+const STATUS_ACCENT: Record<string, string> = {
+  placed: "border-l-blue-500",
+  preparing: "border-l-amber-500",
+  ready: "border-l-purple-500",
+  served: "border-l-teal-500",
+  completed: "border-l-green-500",
+  cancelled: "border-l-border",
+};
+
 // Once an order is served it can no longer be cancelled (mirrors
 // ORDER_STATUS_TRANSITIONS on the backend).
 const CANCELLABLE_STATUSES: OrderStatus[] = ["placed", "preparing", "ready"];
+
+// Broad buckets for the tabs -- "active" covers everything still moving
+// through the kitchen/counter; exact prep-stage filtering (placed vs.
+// preparing vs. ready) lives on the Kitchen page, not here.
+const ACTIVE_STATUSES: OrderStatus[] = ["placed", "preparing", "ready", "served"];
+type StatusTab = "all" | "active" | "completed" | "cancelled";
+const STATUS_TABS: { value: StatusTab; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "active", label: "Active" },
+  { value: "completed", label: "Completed" },
+  { value: "cancelled", label: "Cancelled" },
+];
+
+type ViewMode = "cards" | "table";
 
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest first" },
@@ -48,7 +78,8 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
+  const [statusTab, setStatusTab] = useState<StatusTab>("all");
+  const [viewMode, setViewMode] = useState<ViewMode>("cards");
   const [typeFilter, setTypeFilter] = useState<OrderType | "all">("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -74,7 +105,9 @@ export default function OrdersPage() {
   const filteredOrders = useMemo(() => {
     const query = search.trim().toLowerCase();
     const result = orders.filter((o) => {
-      if (statusFilter !== "all" && o.status !== statusFilter) return false;
+      if (statusTab === "active" && !ACTIVE_STATUSES.includes(o.status)) return false;
+      if (statusTab === "completed" && o.status !== "completed") return false;
+      if (statusTab === "cancelled" && o.status !== "cancelled") return false;
       if (typeFilter !== "all" && o.orderType !== typeFilter) return false;
       if (!isWithinDateRange(o.placedAt, dateFrom, dateTo)) return false;
       if (
@@ -101,7 +134,33 @@ export default function OrdersPage() {
       }
     });
     return result;
-  }, [orders, search, statusFilter, typeFilter, dateFrom, dateTo, sort]);
+  }, [orders, search, statusTab, typeFilter, dateFrom, dateTo, sort]);
+
+  // Counts reflect every other active filter (search/type/date) except the
+  // tab itself, so switching tabs shows how many orders are in *that*
+  // bucket given what's already filtered -- not the unfiltered total.
+  const tabCounts = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    const base = orders.filter((o) => {
+      if (typeFilter !== "all" && o.orderType !== typeFilter) return false;
+      if (!isWithinDateRange(o.placedAt, dateFrom, dateTo)) return false;
+      if (
+        query &&
+        !o.orderNumber.toLowerCase().includes(query) &&
+        !(o.customerName || "").toLowerCase().includes(query) &&
+        !(o.table?.name || "").toLowerCase().includes(query)
+      ) {
+        return false;
+      }
+      return true;
+    });
+    return {
+      all: base.length,
+      active: base.filter((o) => ACTIVE_STATUSES.includes(o.status)).length,
+      completed: base.filter((o) => o.status === "completed").length,
+      cancelled: base.filter((o) => o.status === "cancelled").length,
+    };
+  }, [orders, search, typeFilter, dateFrom, dateTo]);
 
   async function handleConfirmCancelOrder() {
     if (!cancelTarget) return;
@@ -125,12 +184,49 @@ export default function OrdersPage() {
   return (
     <AppShell title="Orders" nav={<VendorNav />}>
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
           <CardTitle className="flex items-center gap-2">
             <ClipboardList className="size-4 text-muted-foreground" />
             Orders
           </CardTitle>
+          <div className="flex items-center gap-0.5 rounded-md border border-border p-0.5">
+            <button
+              onClick={() => setViewMode("cards")}
+              title="Card view"
+              className={`flex size-7 items-center justify-center rounded ${
+                viewMode === "cards" ? "bg-brand-600 text-white" : "text-muted-foreground hover:bg-foreground/5"
+              }`}
+            >
+              <LayoutGrid className="size-4" />
+            </button>
+            <button
+              onClick={() => setViewMode("table")}
+              title="Table view"
+              className={`flex size-7 items-center justify-center rounded ${
+                viewMode === "table" ? "bg-brand-600 text-white" : "text-muted-foreground hover:bg-foreground/5"
+              }`}
+            >
+              <Table2 className="size-4" />
+            </button>
+          </div>
         </CardHeader>
+
+        <CardContent className="flex gap-1.5 overflow-x-auto border-b border-border py-2">
+          {STATUS_TABS.map((t) => (
+            <button
+              key={t.value}
+              onClick={() => updateAndResetPage(setStatusTab, t.value)}
+              className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                statusTab === t.value
+                  ? "border-brand-600 bg-brand-600 text-white"
+                  : "border-border bg-surface-card text-muted-foreground hover:border-brand-300"
+              }`}
+            >
+              {t.label} ({tabCounts[t.value]})
+            </button>
+          ))}
+        </CardContent>
+
         <CardContent className="flex flex-col gap-3 border-b border-border sm:flex-row sm:flex-wrap sm:items-center">
           <SearchInput
             value={search}
@@ -138,18 +234,6 @@ export default function OrdersPage() {
             placeholder="Search order #, customer, table..."
             className="sm:max-w-xs sm:flex-1"
           />
-          <Select
-            value={statusFilter}
-            onChange={(e) => updateAndResetPage(setStatusFilter, e.target.value as OrderStatus | "all")}
-            className="sm:w-auto"
-          >
-            <option value="all">All statuses</option>
-            {(["placed", "preparing", "ready", "served", "completed", "cancelled"] as OrderStatus[]).map((s) => (
-              <option key={s} value={s} className="capitalize">
-                {s}
-              </option>
-            ))}
-          </Select>
           <Select
             value={typeFilter}
             onChange={(e) => updateAndResetPage(setTypeFilter, e.target.value as OrderType | "all")}
@@ -187,7 +271,7 @@ export default function OrdersPage() {
             ))}
           </Select>
         </CardContent>
-        <CardContent className="p-0">
+        <CardContent className={viewMode === "table" ? "p-0" : undefined}>
           {loading ? (
             <div className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
               <Loader2 className="size-4 animate-spin" />
@@ -197,6 +281,80 @@ export default function OrdersPage() {
             <p className="p-6 text-sm text-muted-foreground">No orders yet.</p>
           ) : filteredOrders.length === 0 ? (
             <p className="p-6 text-sm text-muted-foreground">No orders match your search/filters.</p>
+          ) : viewMode === "cards" ? (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {visibleOrders.map((o) => (
+                <div
+                  key={o.id}
+                  className={`flex flex-col rounded-xl border border-border bg-surface-card shadow-soft border-l-4 ${STATUS_ACCENT[o.status]}`}
+                >
+                  <div className="flex items-start justify-between gap-2 border-b border-border p-3.5">
+                    <div className="min-w-0">
+                      <Link
+                        href={`/dashboard/orders/${o.id}`}
+                        className="inline-flex items-center gap-1.5 font-medium text-brand-700 hover:underline"
+                      >
+                        {o.orderNumber}
+                        {o.source === "customer_qr" && (
+                          <QrCode className="size-3.5 shrink-0 text-muted-foreground" aria-label="Self-ordered via QR" />
+                        )}
+                      </Link>
+                      <p className="truncate text-xs capitalize text-muted-foreground">
+                        {o.orderType.replace("_", " ")}
+                        {o.table && ` · Table ${o.table.name}`}
+                        {o.customerName && ` · ${o.customerName}`}
+                      </p>
+                    </div>
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${STATUS_STYLES[o.status]}`}
+                    >
+                      {o.status}
+                    </span>
+                  </div>
+
+                  <ul className="flex-1 divide-y divide-border px-3.5">
+                    {o.items.map((item) => (
+                      <li key={item.id} className="py-2 text-sm">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="min-w-0 truncate text-foreground">
+                            {item.quantity}× {item.itemNameSnapshot}
+                            {item.variantNameSnapshot && ` (${item.variantNameSnapshot})`}
+                          </span>
+                          <span className="shrink-0 font-mono text-xs text-muted-foreground">
+                            {formatCurrency(item.lineTotal, currencyCode)}
+                          </span>
+                        </div>
+                        {item.addons.length > 0 && (
+                          <p className="truncate text-xs text-muted-foreground">
+                            + {item.addons.map((a) => `${a.nameSnapshot} x${a.quantity}`).join(", ")}
+                          </p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div className="flex items-center justify-between gap-2 border-t border-border p-3.5">
+                    <span className="font-mono text-sm font-semibold text-foreground">
+                      {formatCurrency(o.totalAmount, currencyCode)}
+                    </span>
+                    <div className="flex gap-1">
+                      {CANCELLABLE_STATUSES.includes(o.status) && (
+                        <Button variant="ghost" size="sm" onClick={() => setCancelTarget(o)}>
+                          <Ban className="size-3.5" />
+                          Cancel
+                        </Button>
+                      )}
+                      <Link href={`/dashboard/orders/${o.id}`}>
+                        <Button variant="ghost" size="sm">
+                          <Eye className="size-3.5" />
+                          View
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
